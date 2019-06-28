@@ -2,7 +2,7 @@
 
 My imaginary use case was a market stall selling vegetables, the owner wants his customers to pay with crypto but doesn't trust his sales people with access to his wallet. It would also work well for a bar, a shop, girl-scouts selling cookies, anywhere that sales are made face to face.
 
-Another important feature was there should be no central service to processes transactions, all funds received must go directly to the shop wallet. There must be no service fees, no commission charges and no vulnerable central point of failure.
+Another important feature was there should be no central service to process transactions. All funds received must go directly to the shop wallet and there must be no service fees, commission charges or central point of failure.
 
 Zatsuma does simple order processing, checks for payments received & a few other things, but as it can ONLY receive funds the shop owner doesn't have to trust anyone. The shop is fully controlled and operated by the shop owner.
 
@@ -20,8 +20,25 @@ Here's a summary of what it does :-
 - Designed for Zcash (ZEC), both transparent and SHIELDED payments
   ...also supports Bitcoin (BTC) via on-chain or Lightning Network
 
+
 This project has been funded via ZF Grants (https://grants.zfnd.org) - thanks to the Zcash Foundation (https://zfnd.org)
 
 More information and discussion can be found on the Zcash Community Forum, here's a link :-
 
 https://forum.zcashcommunity.com/zcash-point-of-sale-prototype-funded/
+
+
+# System Requirements
+
+Server :-
+
+- 8Gb RAM
+- 500Gb Storage (more is better, blockchains are big)
+- Recommend using a laptop
+
+Client :-
+
+- Smartphone
+- Tablet
+- Browser
+
