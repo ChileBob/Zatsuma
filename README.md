@@ -1,5 +1,5 @@
 # Zatsuma
-Zatsuma : Zcash/Bitcoin/Lightning Point-Of-Sale
+Zatsuma : Zcash Point-Of-Sale
 
 My imaginary use case was a market stall selling vegetables, the owner wants his customers to pay with crypto but doesn't trust his sales people with access to his wallet. It would also work well for a bar, a shop, girl-scouts selling cookies, anywhere that sales are made face to face.
 
