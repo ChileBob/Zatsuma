@@ -1,0 +1,275 @@
+#!/usr/bin/perl
+ 
+# Copyright 2019 ChileBob
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files 
+# (the "Software"), to deal in the Software without limitation the rights to use, copy, modify, merge, publish, distribute, sublicence
+# and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITIES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+# OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# Version 0.0.6-rc2
+
+use strict;
+
+my $installdir = "$ENV{'HOME'}";		# default installation directory
+my $debug      = 1;				# debug level (0 = none, 1 = message only, 2 = message + var)
+
+#####################################################################################################################################################################################################
+# DONT CHANGE ANYTHING BELOW THIS LINE - EVERYTHING YOU NEED IS IN CONFIGURATION FILE shopd-btcln.conf
+#####################################################################################################################################################################################################
+
+my @whitelist = (				# SAFETY CHECK - DO NOT ADD COMMANDS THAT CAN BE USED TO SEND FUNDS - USE 'lncli help <command>' TO VERIFY!!!
+	'getinfo',				# gets network information
+	'addinvoice',				# generates an invoice
+	'lookupinvoice',			# gets invoice details
+	'listchannels'				# gets details of channels
+);
+
+use IO::Socket::INET;													# network sockets
+use JSON;														# general purpose JSON
+use String::HexConvert ':all';												# used to decode/encode r_hash
+use Data::Dumper;													# debugging output, can be deleted
+
+my %config = ();													# config hash
+
+my $json_socket;													# listening socket for JSON requests
+my $client_socket;			
+my $client_addr;
+my $client_maxbytes = 10000;												# max bytes read from network socket
+
+my $JSON = JSON->new->utf8;												# UTF8 encoding for JSON data
+my %json = ();						
+my $json;
+my $json_rx;
+my %json_tx = ();													# clear JSON vars
+my $json_tx = '';
+
+my $node_res;														# hashref from node query
+
+&config_load("$installdir/shopd-btcln.conf");										# load config
+
+while (!&node_command('getinfo') ){ 											# SAFETY CHECK - check lnd is running
+	&debug("WARNING! lnd IS NOT RUNNING! Retrying in 60 seconds...");
+	sleep(60);
+}
+
+$json_socket = new IO::Socket::INET (											# open listening network socket
+	LocalHost => '127.0.0.1',
+	LocalPort => $config{'port'}, 
+	Proto => 'tcp',
+	Listen => $config{'sockets'},
+	Reuse => 1
+);
+$| = 1; 														# auto-flush on network socket
+die "FATAL: Cannot create socket\n" unless $json_socket;								# die if we cant open a socket
+
+print "Starting daemon, listening on 127.0.0.1, port $config{'port'}, $config{'sockets'} sockets available\n";		# helpful startup message
+
+while(1) { 														
+ 
+
+	%json = ();													# clear JSON vars
+	$json = '';
+	$json_rx = '';
+	%json_tx = ();													# clear JSON vars
+	$json_tx = '';
+ 
+	$client_socket = $json_socket->accept();									# accept connection
+
+	print "\033[2J";												# clear screen
+	print "\033[0;0H";												# move to top of screen
+	
+ 	$client_addr = $client_socket->peerhost();									# get connecting IP address
+	if ( $config{'shopip'} != $client_socket->peerhost() ) {					
+		&debug("WARNING! Suspect incoming connection $client_socket->peerhost(), expected from $config{'shopip'}");
+	}
+
+	$client_socket->recv($json_rx, $client_maxbytes);								# read request from client, limited to 8192 bytes & waits for next connection
+ 
+	$json = eval { decode_json($json_rx) };										# decode JSON from proxy, eval wrapped so it wont die horribly when fed garbage
+	if ($@) {
+		&debug("######## SHOPD-BTCLN : GARBAGE REQUEST ########", $json);
+	}
+	else {
+		$json = decode_json($json_rx);										# decode JSON request for real this time
+
+		&debug("######## SHOPD-BTCLN : NEW REQUEST ########", $json);
+
+		###############################################################################################################################################################################################
+		if (( $json->{'cmd'} eq 'status_get') || ($json->{'cmd'} eq 'config_get') ) {			# request node status
+
+			$json->{'channel_max'} = 0;
+
+			if (&node_command('getinfo' ) ){ 								# get network details
+				if ($node_res->{'num_active_channels'} > 0) {
+					$json->{'version'} = $node_res->{'version'};						# lnd version
+					$json->{'version'} =~ s/ .*//;								# the full version number is kinda long, so truncate at first space char	
+					$json->{'connections'} = $node_res->{'num_active_channels'};				# number of active channels connected
+					$json->{'blocks'} = $node_res->{'block_height'};					# current blockcount
+					$json->{'addr'} = $node_res->{'identity_pubkey'};					# public key, we'll use that as an address
+
+					if (&node_command('listchannels' ) ){ 							# get network details
+						foreach my $channel (@{ $node_res->{'channels'} }) {
+							if ( ($channel->{'remote_balance'} > $json->{'channel_max'}) && ($channel->{'active'}) ) {
+								$json->{'channel_max'} = $channel->{'remote_balance'};
+							}
+						}
+					}
+					if ($json->{'channel_max'} > $config{'max_invoice'}) {					# enforce maximum invoice value
+						$json->{'channel_max'} = $config{'max_invoice'};
+					}
+				}
+
+			}
+		}
+
+		###############################################################################################################################################################################################
+		elsif ($json->{'cmd'} eq 'order_new' ) {							# generate address/reference for a new order
+
+			my $value = $json->{'coinamount'} * 100000000;							# convert BTC amount to satoshis
+			my $memo  = "Ref:$json->{'ordernumber'} : $json->{'shopname'}";					# generate the memo
+			if (&node_command('addinvoice', "--amt $value --memo \"$memo\"" ) ) { 				# add the invoice
+				$json->{'address'} = $node_res->{'r_hash'};						# r_hash - used to lookup the invoice
+				$json->{'uri'} = $node_res->{'pay_req'};						# pay_req - what the customer uses to pay
+			}
+		}
+
+		###############################################################################################################################################################################################
+		elsif ( ($json->{'cmd'} eq 'check_conf') || ($json->{'cmd'} eq 'check_txid') ) {		# lookup transaction confirmations given the r_hash
+
+			if (&node_command('lookupinvoice', $json->{'txid'}) ) { 				# get invoice details
+				if ($node_res->{'settled'}) {
+					$json->{'confirmations'} = 1;
+				}
+			}
+		}
+
+		###############################################################################################################################################################################################
+		elsif ($json->{'cmd'} eq 'check_address' ) {							# lookup transaction given the payment uri		
+
+			if (&node_command('listinvoices') ) { 							# get all invoices
+				foreach my $rx ( @{ $node_res->{'result'} }) {						# step through results	
+					if ($rx->{'payment_request'} eq $json->{'cmd[address]'}) {			# look for payment request
+						$json->{'amount'} = $rx->{'value'} / 100000000;				# amount (in BTC!)
+						if ($rx->{'settled'}) {
+							$json->{'confirmations'} = 1;
+						}
+						$json->{'address'} = $json->{'cmd[address]'};				# address
+					}
+				}
+			}
+		}
+
+		$json->{'updated'} = time;									# add a timestamp so shopd can cache things
+
+		%json_tx = encode_json $json, { utf8 => 1};							# JSON encode response hash
+		$client_socket->send(%json_tx);									# send it 
+
+		&debug("######## RESPONSE ########", $json);
+	}
+}
+$json_socket->close();												# we're done, hasta luego (as they say here in the colonies)
+exit;														
+
+
+#####################################################################################################################################################################################################
+# Usage: &config_load( $filename );									Load/Reload config file
+
+sub config_load {
+
+	&debug("config_load($_[0])");
+
+	$config{'updated'} = (stat("$_[0]"))[9];								# log the time so we can react to updates
+
+	open (CONFIG, "$_[0]") || die ("Cant open $_[0]");							# load/parse the config file
+	while (my $line = <CONFIG>) {
+		chop($line);
+		$line =~ s/\#.*//;										# strip comments
+		my @conf = split('=', $line);
+		$conf[0] =~ s/\s//g;										# strip whitespace from keyword
+		$conf[1] =~ s/\"//g;										# strip opening/closing double quotes on values
+		$conf[1] =~ s/^\s//g;										# strip leading whitespace on value
+		$conf[1] =~ s/\s*$//g;										# strip trailing whitespace on value
+
+		if ($conf[0]) {											# add to hash if keyword is valid
+			$config{$conf[0]} = $conf[1];
+		}
+	}
+	close (CONFIG);
+}
+
+
+#####################################################################################################################################################################################################
+# Usage: &node_command( method, params);								Talk to the RPC server
+
+sub node_command {
+	
+	&debug("node_command($_[0])");
+
+	my $raw_result = '';
+
+	if ( grep(/$_[0]/, @whitelist) ) {									# confirm method is whitelisted
+
+		$raw_result = `$config{'client'} $_[0] $_[1] 2>/dev/null`;					# yeah, I know, 'every time you use backticks a puppy dies`
+		my $test_result = eval { decode_json($raw_result) };						# check response was valid json, the decoder dies horribly if it isnt
+		if ($@) {
+			&debug("node_command() : garbage response from lncli", $raw_result);			# was garbage
+			return(0);
+		}
+		else {
+			$node_res = decode_json($raw_result);							# valid response, decode response
+			return(1);
+		}
+	}
+	else {													# method is NOT WHITELISTED !!!!!
+		$node_res = { 'error' => 'restricted', 'errorcode' => 1 };
+		&debug("WARNING: node_command($_[0]) : RESTRICTED COMMAND !!!");
+		return(0);	
+	}
+}
+
+#####################################################################################################################################################################################################
+# Usage: &json_send(ipaddr, port, query);								Send to shopd 
+#
+sub json_send {
+
+	&debug("json_send($_[0], $_[1])", $_[2]);
+
+	my $json_rx;
+	my %json_tx = ( 'cmd[req]' => 'notify', 'cmd[coin]' => 'btcln', 'cmd[data]' => $_[2] );			# this is how we talk to shopd, its ugly but works
+
+	my $socket = IO::Socket::INET->new(PeerAddr => $_[0], PeerPort => $_[1], Proto => 'tcp');
+
+	if (!$socket) {												# failed to connect, shopd down
+		return(0);
+	}
+	else {
+		my $json_tx = encode_json \%json_tx, { utf8 => 1};						# JSON encode request
+		$socket->send($json_tx);									# send it 
+		$socket->recv($json_rx, $client_maxbytes);							# read response
+		$socket->close();										# close the socket
+		return(decode_json($json_rx));									# return decoded response
+	}
+}
+
+#####################################################################################################################################################################################################
+# Usage: &debug(message, var);										Print debugging messages
+#
+sub debug {
+
+	if ($debug > 0) {											# print the message (debug = 1)
+		print "DEBUG : $_[0]\n";
+	}
+
+	if ( ($_[1]) && ($debug > 1)) {										# print the var (debug = 2)
+		print Dumper $_[1];
+	}
+}
+
+

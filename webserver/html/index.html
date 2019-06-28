@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>Zatsuma</title>
+<meta charset="utf-8">
+<meta name="description" content="Zatsuma : Zcash/Bitcoin Point-Of-Sale : ChileBob">
+<meta name="robots" content="index, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" type="text/css" href="./css/portrait.css">
+
+<script src="./js/jquery-3.2.1.min.js"></script>
+<script src="./js/jquery.qrcode.min.js"></script>
+<script src="./js/zatsuma.js"></script>
+
+</head>
+
+<!--
+Copyright 2019 ChileBob
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files 
+(the "Software"), to deal in the Software without limitation the rights to use, copy, modify, merge, publish, distribute, sublicence
+and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITIES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
+
+<body>
+<div id="fullscreen" onmousemove="onMouseMove(event);">
+
+	<div id="divSplash">
+	</div>
+
+	<div id="divTitleContainer">
+		<div id="divTitleAlert"></div>
+		<div id="divTitleText"></div>
+		<div id="divTitleImg"><img src="images/menu-33x32.png" width="33" height="32" onclick="B_menu();"></div>
+	</div>
+
+	<div id="divLogin" onclick="B_menu('Login');">
+		<div id="divLoginContainer">
+			<div id="divLoginTableContainer">
+				<table align="center">
+					<tr>
+						<td><img src="images/blank-34x20.png"></td>
+						<td><input id="E_login_username" type="text" placeholder="Username"></td>
+						<td><img src="images/blank-34x20.png"></td>
+					</tr>
+
+					<tr>
+						<td><img src="images/blank-34x20.png"></td>
+						<td><input id="E_login_password" type="password" placeholder="Password"></td>
+						<td><img id="E_login_eye" src="images/eye-34x20.png" title="Click to show your password" onclick="B_login('eyeball');"></td>
+					</tr>
+
+					<tr>
+						<td colspan="3"><button id="E_login_guest" class="button" onclick="B_login('guest');">Guest</button> &nbsp; <button class="button" onclick="B_login('login');">Login</button></td>
+					</tr>
+				</table>
+			</div>
+			<div id="divLoginMessage"></div>
+			<div id="canvasLoginContainer">
+				<canvas id="canvasLogin"></canvas>
+			</div>
+		</div>
+	</div>
+
+	<div id="divError" onclick="B_menu();">
+		<div id="errorContainer">
+			<div id="divErrorMessage"></div>
+			<div id="canvasErrorContainer">
+				<canvas id="canvasError"></canvas>
+			</div>
+		</div>
+	</div>
+
+	<div id="divMessages">
+		<div id="divMessagesContainer">
+			<div id="divMessagesCompose">
+				<table width="100%">
+					<tr>
+						<td style="text-align: left;"><div id="divMessagesComposeSelect"></div></td>
+						<td style="text-align: right;"><button id="E_Messages_Send" class="button" onclick="B_mesg('send');">Send</button></td>
+					</tr>
+				</table>	
+				<textarea id="E_Messages_Content" rows="5" placeholder="Type your message here (256 chars max)"></textarea>
+			</div>
+	
+			<div id="divMessagesList">
+			</div>
+		</div>
+	</div>
+
+	<div id="divCheckout">
+			<div id="divCheckoutDisplay">
+				<table class="CheckoutDisplayTable">
+					<tr>
+						<th id="E_checkoutFIATamount" colspan="3" style="font-size: 2.5rem; text-align: right;">0</th>
+					</tr>
+					<tr>
+						<td width="40%" id="E_checkoutZECamount">0.00000000</br>ZEC</td>
+						<th width="20%" id="E_checkoutFIAT"></th>
+						<td width="40%" id="E_checkoutBTCamount">0.00000000</br>BTC</td>
+					</tr>
+				</table>
+			</div>
+
+			<div id="divCheckoutKeyboard">
+				<table class="tableCheckoutKeyboard" align="center"> 
+					<tr>
+						  <td id="calc1" onmousedown="B_calc('1',1);" onmouseup="B_calc('1',0)"; onmouseleave="B_calc('1',0);">1</td>
+						  <td id="calc2" onmousedown="B_calc('2',1);"; onmouseup="B_calc('2',0);" onmouseleave="B_calc('2',0);">2</td>
+						  <td id="calc3" onmousedown="B_calc('3',1);" onmouseup="B_calc('3',0);" onmouseleave="B_calc('3',0);">3</td>
+					</tr>
+					<tr>
+						  <td id="calc4" onmousedown="B_calc('4',1);" onmouseup="B_calc('4',0);" onmouseleave="B_calc('4',0);">4</td>
+						  <td id="calc5" onmousedown="B_calc('5',1);" onmouseup="B_calc('5',0);" onmouseleave="B_calc('5',0);">5</td>
+						  <td id="calc6" onmousedown="B_calc('6',1);" onmouseup="B_calc('6',0);" onmouseleave="B_calc('6',0);">6</td>
+					</tr>
+					<tr>
+						  <td id="calc7" onmousedown="B_calc('7',1);" onmouseup="B_calc('7',0);" onmouseleave="B_calc('7',0);">7</td>
+						  <td id="calc8" onmousedown="B_calc('8',1);" onmouseup="B_calc('8',0);" onmouseleave="B_calc('8',0);">8</td>
+						  <td id="calc9" onmousedown="B_calc('9',1);" onmouseup="B_calc('9',0);" onmouseleave="B_calc('9',0);">9</td>
+					</tr>
+					<tr>
+						  <td id="calcDOT" onmousedown="B_calc('DOT',1);" onmouseup="B_calc('DOT',0);" onmouseleave="B_calc('DOT',0);">.</td>
+						  <td id="calc0" onmousedown="B_calc('0',1);" onmouseup="B_calc('0',0);" onmouseleave="B_calc('0',0);">0</td>
+						  <td id="calcDEL" onmousedown="B_calc('DEL',1);" onmouseup="B_calc('DEL',0);" onmouseleave="B_calc('DEL',0);">&larr;</td>
+					</tr>
+					<tr>
+						  <td id="calcDIVIDE" onmousedown="B_calc('DIVIDE',1);" onmouseup="B_calc('DIVIDE',0);" onmouseleave="B_calc('DIVIDE',0);">&divide;</td>
+						  <td id="calcCLEAR" onmousedown="B_calc('CLEAR',1);" onmouseup="B_calc('CLEAR',0);" onmouseleave="B_calc('CLEAR',0);">C</td>
+						  <td id="calcPLUS" onmousedown="B_calc('PLUS',1);" onmouseup="B_calc('PLUS',0);" onmouseleave="B_calc('PLUS',0);">&plus;</td>
+					</tr>
+					<tr>
+						  <td id="calcMULTIPLY" onmousedown="B_calc('MULTIPLY',1);" onmouseup="B_calc('MULTIPLY',0);" onmouseleave="B_calc('MULTIPLY',0);">&times;</td>
+						  <td id="calcEQUAL" onmousedown="B_calc('EQUAL',1);" onmouseup="B_calc('EQUAL',0);" onmouseleave="B_calc('EQUAL',0);">=</td>
+						  <td id="calcMINUS" onmousedown="B_calc('MINUS',1);" onmouseup="B_calc('MINUS',0);" onmouseleave="B_calc('MINUS',0);">-</td>
+					</tr>
+				</table>
+			</div>
+
+			<div id="divCheckoutCoin"> 
+
+				<div id="divCheckoutZECT"  class="CheckoutCoin">
+					<table>
+						<tr><td id="E_Checkout_Coin_ZECT"><img src="./images/zect-80x80.png" width="80" height="80" onclick="B_checkout('ZECT');"></td></tr>
+						<tr><td>ZEC Transparent</td></tr>
+						<tr><td>&nbsp;</td></tr>
+					</table>
+				</div>
+
+				<div id="divCheckoutZECZ"  class="CheckoutCoin">
+					<table>
+						<tr><td id="E_Checkout_Coin_ZECZ"><img src="./images/zecz-80x80.png" width="80" height="80" onclick="B_checkout('ZECZ');"></td></tr>
+						<tr><td>ZEC Shielded</td></tr>
+						<tr><td>&nbsp;</td></tr>
+					</table>
+				</div>
+
+				<div id="divCheckoutBTCLN" class="CheckoutCoin">
+					<table>
+						<tr><td id="E_Checkout_Coin_BTCLN"><img src="./images/btcln-80x80.png"   width="80" height="80" onclick="B_checkout('BTCLN');"></td></tr>
+						<tr><td style="text-align: center;">BTC Lightning</td></tr>
+						<tr><td id="E_checkoutBTCLNlimit" style="text-align: center;"></td></tr>
+					</table>
+				</div>
+
+				<div id="divCheckoutBTC"   class="CheckoutCoin">
+					<table>
+						<tr><td id="E_Checkout_Coin_BTC"><img src="./images/btc-80x80.png"      width="80" height="80" onclick="B_checkout('BTC');" title="BTC : Bitcoin (NOT PRIVATE)"></td></tr>
+						<tr><td>BTC On-Chain</td></tr>
+						<tr><td>&nbsp;</td></tr>
+					</table>
+				</div>
+
+				<div id="divCheckoutCASH"   class="CheckoutCoin">
+					<table>
+						<tr><td><img src="./images/cash-80x80.png"      width="80" height="80" onclick="B_checkout('CASH');"></td></tr>
+						<tr><td id="E_checkoutFIAT_coin"></td></tr>
+						<tr><td>&nbsp;</td></tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="divWallet" onclick="B_menu('Wallet');">
+		<div id="divWalletContainer">
+			<div id="divWalletQRcode"></div>
+			<div id="divWalletAddress">No Address</div>
+		</div>
+		<div id="divWalletCoin">
+			<div id="divWalletZECT"  class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/zect-80x80.png" width="80" height="80" onclick="B_wallet('ZECT');"></td></tr>
+					<tr><td id="E_walletZECTamount">0.00000000 ZEC</td></tr>
+					<tr><td id="E_walletZECTfiat">0.00 USD</td></tr>
+				</table>
+			</div>
+
+			<div id="divWalletZECZ"  class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/zecz-80x80.png" width="80" height="80" onclick="B_wallet('ZECZ');"></td></tr>
+					<tr><td id="E_walletZECZamount">0.00000000 ZEC</td></tr>
+					<tr><td id="E_walletZECZfiat">0.00 USD</td></tr>
+				</table>
+			</div>
+
+			<div id="divWalletBTCLN" class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/btcln-80x80.png"   width="80" height="80" onclick="B_wallet('BTCLN');"></td></tr>
+					<tr><td id="E_walletBTCLNamount">0.00000000 BTC</td></tr>
+					<tr><td id="E_walletBTCLNfiat">0.00 USD</td></tr>
+				</table>
+			</div>
+
+			<div id="divWalletBTC"   class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/btc-80x80.png"      width="80" height="80" onclick="B_wallet('BTC');"></td></tr>
+					<tr><td id="E_walletBTCamount">0.00000000 BTC</td></tr>
+					<tr><td id="E_walletBTCfiat">0.00 USD</td></tr>
+				</table>
+			</div>
+
+			<div id="divWalletCASH"   class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/cash-80x80.png"      width="80" height="80" onclick="B_wallet('CASH');"></td></tr>
+					<tr><td id="E_walletCASHamount">0.00000000 ZEC</td></tr>
+					<tr><td id="E_walletCASHfiat">0.00 USD</td></tr>
+				</table>
+			</div>
+
+		</div>
+	</div>
+
+	<div id="divAbout">
+		<div id="divAboutContainer">
+			<h2>Legal &amp; Disclaimer</h2>
+	
+			<ul>
+				<li>The author <i><b>IS NOT RESPONSIBLE</b></i> for any damage or loss, financial or otherwise.</li>
+				<li>Use this software <i><b>AT YOUR OWN RISK</b></i></li>
+				<li><a href="https://electriccoin.co" target="_blank">The Electric Coin Company (ECC)</a> &amp; <a href="https://zfnd.org" target="_blank">Zcash Foundation (ZFnd)</a> :-
+					<ul>
+						<li><b><i>HAVE NOT REVIEWED THIS SOFTWARE.</i></b></li>
+						<li><b><i>HAVE NOT ENDOSED THIS SOFTWARE.</i></b></li>
+						<li><b><i>DO NOT SUPPORT THIS SOFTWARE.</i></b></li>
+					</ul>
+				<li>Zcash trademarks belong to ECC.</li>
+			</ul>
+	
+			<h2>Frequently Asked Questions</h2>
+			<ul>
+				<li><h3>What does Zatsuma do?</h3>
+
+					<p>Its a crypto checkout for person-to-person sales, ie: a shop, market, bar, pizza delivery, girl scouts selling cookies, etc.</p>
+					<p>Unlike a crypto wallet it <i>can only receive funds</i>, making it safer for use by a group of people.</p>
+				</li>
+
+				<li><h3>How do I get it?</h3>
+					<p>Zatsuma has been funded by <a href="https://zfgrants.zfnd.org" target="_blank">ZF Grants</a> is available to all.</p>
+					<p>Updates are posted on <a href="https://forum.zcashcommunity.com/t/zcash-point-of-sale-project-prototype/33019/28" target="_blank">Zcash Community Forum</a>, feel free to join in the discussion.</p>
+				</li>
+	
+				<li><h3>Why Zcash (ZEC) ?</h3>
+					<p>Zcash does not leak financial information.</p>
+					<p>Good transaction times.</p>
+					<p>Low transaction fees.</p>
+					<p>Secure messaging (which is <i>really</i> cool).</p>
+					<p>Available on many exchanges.</p>
+					<p>Simple to install &amp; relatively fast to setup.</p>
+					<p>Zcash is the default coin &amp; <i>required</i> by this software.</p>
+				</li>
+	
+				<li><h3>Why Bitcoin (BTC) ?</h3>
+					<p>Everyone has heard of Bitcoin.</p>
+					<p>Everyone who has crypto has Bitcoin.</p>
+					<p>Available on every exchange.</p>
+					<p>Lightning Network transactions confirm in seconds &amp; fees are tiny.</p>
+					<p>Bitcoin on-chain transactions are also supported.</p>
+				</li>
+
+				<li><h3>How much does this cost ?</h3>
+					<p>Zatsuma is free for anyone to use.</p>
+					<p>There are no intermediaries, funds go directly to your node wallet which only you control.</p>
+					<p>No hosting required, it uses your computer &amp; internet connection.</p>
+				</li>
+	
+				<li><h3>Cookies? Privacy Policy ?</h3>
+					<p>No personal information is collected or shared.</p>
+					<p>Passwords are randomly generated &amp; encrypted on the server.</p>
+					<p>A session cookie is stored on your device when you login &amp; encrypted on the server.</p>
+					<p>When you logout the session cookie is deleted from your device &amp; destroyed on the server.</p>
+				</li>
+	
+				<li><h3>System requirements ?</h3>
+					<p>Server :-
+						<ul>
+							<li>Debian/Ubuntu Linux</li>
+							<li>8Gb RAM (4Gb min, but sucks!)</li>
+							<li>500Gb Storage (more is better!)</li>
+							<li>An old laptop works well</li>
+							<li>Patience (downloading blockchains takes time!)</li>
+						</ul>
+					<p>Client (any of the following):-
+					<ul>
+						<li>Smartphone</li>
+						<li>Tablet</li>
+						<li>Web Browser</li>
+					</ul>
+					</p>
+				</li>
+	
+				<li><h3>How to I send funds?</h3>
+					<p>Zatsuma can <b><i>only receive</i></b> funds.</p>
+					<p>To send funds the owner of the wallet must use a node client, ie :-
+					<ul>
+						<li>ZECwallet</li>
+						<li>zcash-cli</li>
+						<li>bitcoin-cli</li>
+						<li>lncli</li>
+					</ul></p>
+				</li>
+	
+				<li><h3>Why is BTC Lightning not always available?</h3>
+					<p>Bitcoin Lightning payments are only possible when the sale value is :-
+					<ul>
+						<li>Less than 0.0429 BTC (lnd daemon safety limit).</li>
+						<li>Less than the maximum inbound capacity of your largest active channel.</li>
+					</ul>
+					</p>
+				</li>
+	
+				<li><h3>Why is there a dog on the front page?</h3>
+					<p>I couldn't find a picture of a <i><font color="red">canary</font></i> that I liked.</p>
+				</li>
+	
+				<li><h3>Where do the exchange rates come from?</h3>
+					<p>Coinlib, they provide rates for 154 fiat/crypto pairs.</p>
+					<p>To access their API you have to <a href="https://coinlib.io" target="_blank">register</a>.</p>
+					<p>Coinlib has a very cool app for tracking crypto prices &amp; portfolios.</p>
+				</li>
+	
+				<li><h3>How do you get a domain name for your shop?</h3>
+					<p>Dynamic DNS is provided by DuckDNS, which is a free service.</p>
+					<p>You have to <a href="https://duckdns.org">register</a> using your Reddit, Github or Twitter account.</p>
+				</li>
+
+				<li><h3>Credits &amp; Honourable Mentions</h3>
+					<p>For developing the code &amp; math that makes this possible :-</p>
+					<ul>
+						<li><a href="https://electriccoin.co" target="_blank">The Electric Coin Company</a></li>
+					</ul>
+
+					<p>For funding this project via <a href="https://grants.zfnd.org" target="_blank">ZF Grants</a>:-</p>
+					<ul>
+						<li>Zcash Foundation</li>
+						<li>@Tripleyouwu</li>
+						<li>@sonya</li>
+					</ul>
+
+					<p>For their help with testing, feedback &amp; enthusiasm :-</p>
+					<ul>
+						<li><a href="https://zfnd.org" target="_blank">The Zcash Foundation</a></li>
+						<li><a href="https://forum.zcashcommunity.com" target="_blank">Zcash Community</a>
+						<ul>
+							<li>@garethtdavies</li>
+							<li>@sonya</li>
+							<li>@Autotunafish</li>
+							<li>@jmsjsph</li>
+							<li>@Shawn</li>
+							<li>@rex4539</li>
+							<li>@adityapk00</li>
+						</ul>
+						</li>
+					</ul>
+
+					<p>Graphics from :-</p>
+					<ul>
+						<li><a href="https://www.kisspng.com" target="_blank">Kisspng.com</a></li>
+						<li><a href="https://www.coinbase.com" target="_blank">Coinbase</a></li>
+						<li><a href="https://www.dreamstime.com" target="_blank">Dreamstime</a></li>
+						<li><a href="https://icons8.com" target="_blank">Icons8</a></li>
+					</ul>
+			</ul>
+		</div>
+	</div>
+
+	<div id="divUsers" onclick="B_menu('Users');">
+		<div id="divUsersContainer">
+			<div id="divUsersList">
+			</div>
+		</div>
+	</div>
+
+	<div id="divOrders">
+		<div id="divOrdersContainer">
+			<div id="divOrdersList">
+				<p>No orders.</p>
+			</div>
+		</div>
+	</div>
+
+	<div id="divOrder">
+		<div id="divOrderContainer">
+			<div id="divOrderQRcode"></div>
+			<div id="divOrderAddress"></div>
+			<div id="divOrderStatus">
+				<table align="center">
+					<tr><th align="left">Order</th><td align="left" id="E_Order_OrderNumber"></td></tr>
+					<tr><th align="left">Amount</th><td align="left" id="E_Order_Amount"></td></tr>
+					<tr><th align="left">Sold By</th><td align="left" id="E_Order_UserName"></td></tr>
+					<tr><th align="left">Confirmations</th><td align="left" id="E_Order_Confirmations"></td></tr>
+					<tr><th align="left">Status</th><td align="left" id="E_Order_Status"></td></tr>
+					<tr><td colspan="2">&nbsp;</td></tr>
+					<tr><td colspan="2" id="E_Order_Button"></td></tr>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<div id="divStatus" onclick="B_menu('Status');">
+		<div id="divStatusContainer">
+			<h3>ZEC : Zcash (zcashd)</h3>
+			<div id="divStatusZEC"><p>Not connected!</p></div>
+
+			<h3>BTC : Lightning Network (lnd)</h3>
+			<div id="divStatusBTCLN"><p>Not connected!</p></div>
+
+			<h3>BTC : Bitcoin (bitcoind)</h3>
+			<div id="divStatusBTC"><p>Not connected!</p></div>
+	
+		</div>
+	</div>
+
+	<div id="divView">
+		<div id="divViewContainer">
+			<div id="divViewList">
+			</div>
+		</div>
+
+		<div id="divViewGuestbook">
+			<p style="font-weight:bold;">Something to say?</br>Scan with ZECwallet to leave a message.</p>
+			<div id="divViewQRcode"></div>
+		</div>
+	</div>
+
+	<div id="divMenu">
+		<table>
+			<tr id="divMenuLogin"><th onclick="B_menu('Login');">LOGIN</th></tr>
+			<tr id="divMenuCheckout"><th onclick="B_menu('Checkout');">CHECKOUT</th></tr>
+			<tr id="divMenuWallet"><th onclick="B_menu('Wallet');">SHOP WALLET</th></tr>
+			<tr id="divMenuUsers"><th onclick="B_menu('Users');">ACTIVE USERS</th></tr>
+			<tr id="divMenuOrders"><th onclick="B_menu('Orders');">MY ORDERS</th></tr>
+			<tr id="divMenuMessages"><th onclick="B_menu('Messages');">MESSAGES</th></tr>
+			<tr id="divMenuStatus"><th onclick="B_menu('Status');">SERVER STATUS</th></tr>
+			<tr id="divMenuView"><th onclick="B_menu('View');">VIEW ORDERS</th></tr>
+			<tr id="divMenuAbout"><th onclick="B_menu('About');">ABOUT ZATSUMA</th></tr>
+			<tr id="divMenuLogout"><th onclick="B_menu('Logout');">LOGOUT</th></tr>
+		</table>
+	</div>
+
+	<div id="divFooter">
+		<table width="100%">
+			<tr>
+				<td style="text-align:left; width:25%; vertical-align:top;"><a href="https://forum.zcashcommunity.com/t/zcash-point-of-sale-prototype-funded/33019" target="_blank">Zatsuma (v0.0.6-rc1)</a></td>
+				<td style="text-align:center; width:50%; vertical-align:top;"><a href="https://coinlib.io/apidocs" target="_blank">Powered by CoinLib</a>, <a href="https://grants.zfnd.org" target="_blank">Funded by ZF Grants</a></td>
+				<td style="text-align:right; width:25%; vertical-align:top;"><a href="https://forum.zcashcommunity.com/u/chilebob" target="_blank">ChileBob</a></td>
+			</tr>
+		</table>
+	</div>
+</div>
+</body>
+</html>

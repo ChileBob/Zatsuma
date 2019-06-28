@@ -1,0 +1,880 @@
+#!/usr/bin/perl
+#
+# Copyright 2019 ChileBob
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files 
+# (the "Software"), to deal in the Software without limitation the rights to use, copy, modify, merge, publish, distribute, sublicence
+# and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITIES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+# OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# Version 0.0.6-rc2
+
+use strict;
+
+my $installdir = "$ENV{'HOME'}";											# Default installation directory 
+my $debug = 1;														# debugging level (0 = off, 1 = print message, 2 = pring message & var)
+
+use utf8;
+use IO::Socket::INET;													# network socket service
+use JSON;														# general purpose JSON
+use DBI;														# mysql database connection
+use DBD::mysql;														# mysql database connection
+use LWP::UserAgent;													# fetchs remote content (exchange rates)
+use HTTP::Request;													# requests remote content from external APIs
+use String::HexConvert ':all';												# used to decode raw zaddr memos
+use HTML::Restrict;													# strips html tags from strings, used when reading zaddr memos
+use HTML::Entities;													# converts ascii to html entities for strange chars, used for messages
+use Data::Dumper;													# useful for debugging
+
+my $config_updated;													# last modified timestamp for shopd.conf
+my %config = ();													# shop configuration
+
+my $json_socket;													# listening socket for JSON requests
+my $client_socket;			
+my $client_addr;
+
+my $JSON = JSON->new;		
+my %json = ();						
+my $json;														# outbound json
+my $json_rx;														# raw received json request
+my $client_maxbytes = 10000;												# maximum size read from network sockets
+
+my @user;
+
+my $notify = { 'message' => 0, 'orders' => 0, 'users' => 0 };								# timestamps for notification events
+
+&config_load("$installdir/shopd.conf");
+
+my $dbh = DBI->connect("dbi:mysql:dbname=$config{'dbname'}","$config{'dblogin'}","$config{'dbpassword'}",{AutoCommit => 1});	# connect to database
+if (!$dbh) {															# confirm connection
+	die ("FATAL: Cannot connect to database: $config{'dbname'}");
+}
+$dbh->{mysql_auto_reconnect} = 1;											# auto reconnect to mysql
+
+my $db_query = $dbh->prepare("select * from user where privilege = 100;");						# make sure there's an admin user
+my $db_query_hits = $db_query->execute();
+
+if ($db_query_hits < 1) {												# nope, so create one with a random password
+	my $newpassword = &newkey(12);
+	my $db_value = $dbh->quote($newpassword);
+	my $db_newsession = $dbh->quote(&newkey(64));
+
+	my $db_update = $dbh->do("insert into user (username, password, privilege, session) values ('admin', PASSWORD($db_value), 100, PASSWORD($db_newsession));");
+	print "User 'admin' created, password '$newpassword'\n";
+}
+
+											
+#####################################################################################################################################################################################################
+# COMMAND LINE ARGUMENTS 
+#####################################################################################################################################################################################################
+#
+if ($#ARGV >= 0) {										
+													
+
+	if ($ARGV[0] eq '-coinlib') {											# get exchange rate from Coinlib
+
+		if ($config{'coinlib_api'} eq '') {
+			die ("FATAL: You need an API key from https://coinlib.io for currency conversion, please update shopd.conf");
+		}
+		if (!$config{'fiat'}) {											# check a fiat currency has been given
+			die("FATAL: No fiat currency has been specified, please update shopd.conf");
+		}
+
+		my $URL = "https://coinlib.io/api/v1/coin?key=$config{'coinlib_api'}\&pref=$config{'fiat'}\&symbol=BTC,ZEC";
+		my $ua = LWP::UserAgent->new(ssl_opts => { verify_hostname => 1});
+		$ua->agent("Mozilla/8.0");										# lets pretend we're Mozilla
+		my $header = HTTP::Request->new(GET => $URL);
+		my $request = HTTP::Request->new('GET', $URL, $header);
+		my $response = $ua->request($request);
+		my $json_price = decode_json($response->content);							# decode the JSON response
+
+		if ($response->is_success) {										# success, we have exchange rates
+			my @rate = ();
+			if ($config{'fiat'} eq 'CLP') {									# no such thing as fractions of a Chilean Peso !!
+				$rate[0] = int($json_price->{'coins'}[0]->{'price'});
+				$rate[1] = int($json_price->{'coins'}[1]->{'price'});
+			}
+			else {												# everything else gets rounded to two places
+				$rate[0] = sprintf "%.02f", $json_price->{'coins'}[0]->{'price'};
+				$rate[1] = sprintf "%.02f", $json_price->{'coins'}[1]->{'price'};
+			}
+			my $json_price = decode_json($response->content);						# decode the JSON response  & cache in database
+			$dbh->do("insert into exchange (symbol, rate, fiat) values ('$json_price->{'coins'}[0]->{'symbol'}', $rate[0], '$config{'fiat'}');");
+			$dbh->do("insert into exchange (symbol, rate, fiat) values ('$json_price->{'coins'}[1]->{'symbol'}', $rate[1], '$config{'fiat'}');");
+		}
+		else {													# failed to get coinlib rates
+			print "WARNING: Failed to get exchange rates from coinlib.io\n";
+		}
+		$dbh->do("delete from exchange where created < (now() - interval $config{'coinlib_cache'} minute);");	# flush old price info 
+	}
+
+	elsif ($ARGV[0] eq '-duckdns') {									# refresh IP address for duckdns
+	
+		my $URL = "https://www.duckdns.org/update?domains=$config{'duckdns_domain'}\&token=$config{'duckdns_token'}";	# send request to duckdns
+		my $ua = LWP::UserAgent->new(ssl_opts => { verify_hostname => 1});
+		my $header = HTTP::Request->new(GET => $URL);
+		my $request = HTTP::Request->new('GET', $URL, $header);
+		my $response = $ua->request($request);
+
+		if (!$response->is_success) {				
+			print "WARNING: FAILED to refresh dynamic IP address at duckdns.org\n";
+		}
+	}
+	elsif ($ARGV[0] eq '-adduser') {									# generate a new user account
+
+		my $newusername = $ARGV[1];
+		$newusername =~ s/\s//g;
+		my $db_newusername = $dbh->quote($newusername);
+
+		my $newpassword = &newkey(12);
+		my $db_value = $dbh->quote($newpassword);
+		my $db_newsession = $dbh->quote(&newkey(64));
+
+		my $db_update = $dbh->do("insert into user (username, password, privilege, session) values ($db_newusername, PASSWORD($db_value), 10, PASSWORD($db_newsession));");
+		print "User '$newusername' created, password '$newpassword'\n";
+	}
+	
+	&order_process();											# update any pending orders
+
+	exit;													# time to go, not started as a daemon
+}
+
+#####################################################################################################################################################################################################
+# START THE DAEMON
+#####################################################################################################################################################################################################
+
+$json_socket = new IO::Socket::INET (										# open network socket
+	LocalHost => $config{'shopip'},
+	LocalPort => $config{'shopport'}, 
+	Proto => 'tcp',
+	Listen => $config{'shopsockets'},
+	Reuse => 1
+);
+$| = 1; 													# auto-flush on network socket
+
+die "FATAL: Cannot create socket\n" unless $json_socket;							# die if we cant open a socket (ie: daemon is already running)
+
+print "INFO: Listening on $config{'shopip'}, port $config{'shopport'}, $config{'shopsockets'} sockets available\n";
+
+														####################################################################################
+while(1) { 													# MAIN LOOP
+
+	%json = ();												# clear vars
+	$json = '';
+	$json_rx = '';
+	@user = ();
+
+	$client_socket = $json_socket->accept();								# accept connection
+
+	if ($config{'shopip'} ne $client_socket->peerhost()) { 								# WARNING : Complain if the connection was NOT from the webserver IP address
+		&debug ("WARNING: Incoming connection was NOT from the webserver IP address! ($config{'shopip'})");
+	}		
+
+	$client_socket->recv($json_rx, $client_maxbytes);								# read request from client, limited to 8192 bytes to filter incoming nastiness
+
+	$json = eval { decode_json($json_rx) };										# decode JSON from proxy, eval wrapped so it wont die horribly when fed garbage
+	if ($@) {
+		&debug("######## SHOPD : GARBAGE REQUEST ########", $json_rx);
+	}
+	else {												
+		$json = decode_json($json_rx);										# decode JSON from proxy
+
+		print "\033[2J"; 	# clear screen
+		print "\033[0;0H";	# move to top of screen
+
+		&debug("######## SHOPD : NEW REQUEST ########", $json);
+
+
+#####################################################################################################################################################################################################
+# RECEIVE NOTIFICATION FROM A NODE
+#####################################################################################################################################################################################################
+		
+		if ($json->{'cmd[req]'} eq 'notify' ) {								# notification from a node daemon
+
+			if ($json->{'cmd[data]'}->{'coin'} eq 'ZECZ') {							# ZCASH SHIELDED NOTIFICATION/CONFIRMATION
+				if ( $json->{'cmd[data]'}->{'memo'} =~ m/^Ref:/ ) {
+
+					if ( $json->{'cmd[data]'}->{'confirmations'} == 0) {				# its a notification
+						&debug("Processing ZEC zaddr notification");
+						my $db_update = $dbh->do("update orders set status = 1, confirmations = $json->{'cmd[data]'}->{'confirmations'}, txid = '$json->{'cmd[data]'}->{'txid'}' where address = '$json->{'cmd[data]'}->{'address'}' and coin = 'ZECZ';");
+					}
+					else {										# its a confirmation
+						&debug("Processing ZEC zaddr confirmation");
+						my $db_update = $dbh->do("update orders set confirmations = $json->{'cmd[data]'}->{'confirmations'}, txid = '$json->{'cmd[data]'}->{'txid'}' where address = '$json->{'cmd[data]'}->{'address'}' and coin = 'ZECZ';");
+					}
+
+
+				}
+				elsif ($json->{'cmd[data]'}->{'memo'}) {						# its a message
+					my $db_check = $dbh->prepare("select idx from mesg where txid = '$json->{'cmd[data]'}->{'txid'}';");	# see if we already have it
+					my $db_check_hits = $db_check->execute();
+					if ($db_check_hits < 1) {							# nope, its a new message
+
+						if ($json->{'cmd[data]'}->{'memo'} =~ m/^f60*.$/) {			# if its an empty message, set to null content
+							&debug("Received empty ZEC memo");
+						}
+						else {									# not null, so add to messages
+							&debug("Received ZEC memo");
+
+							my $hr = HTML::Restrict->new();
+							my $html_safe = $hr->process($json->{'cmd[data]'}->{'memo'});		# strip html & escape chars for mysql
+							$html_safe =~ s/\n/\<br\>/g;								
+	
+							my $db_content = $dbh->quote($html_safe);
+							my $db_update = $dbh->do("insert into mesg (type, content, txid) values (1, $db_content, '$json->{'cmd[data]'}->{'txid'}');");
+							$notify->{'message'} = time;						# trigger client audio
+						}
+					}
+				}
+			}
+
+			elsif ($json->{'cmd[data]'}->{'coin'} eq 'ZECT') {						# ZCASH TRANSPARENT NOTIFICATION/CONFIRMATION
+
+				if ( $json->{'cmd[data]'}->{'confirmations'} == 0) {					# its a notification
+					my $db_update = $dbh->do("update orders set status = 1, confirmations = $json->{'cmd[data]'}->{'confirmations'}, txid = '$json->{'cmd[data]'}->{'txid'}' where address = '$json->{'cmd[data]'}->{'address'}' and coin = 'ZECT';");
+				}
+				else {											# its a confirmation
+					my $db_update = $dbh->do("update orders set confirmations = $json->{'cmd[data]'}->{'confirmations'}, txid = '$json->{'cmd[data]'}->{'txid'}' where address = '$json->{'cmd[data]'}->{'address'}' and coin = 'ZECT';");
+				}
+			}
+
+
+			elsif ($json->{'cmd[coin]'} eq 'BTC') {								# BITCOIN ON-CHAIN NOTIFICATION/CONFIRMATION
+
+				if ( $json->{'cmd[data]'}->{'confirmations'} == 0) {					# its a notification
+					my $db_update = $dbh->do("update orders set status = 1, confirmations = $json->{'cmd[data]'}->{'confirmations'}, txid = '$json->{'cmd[data]'}->{'txid'}' where address = '$json->{'cmd[data]'}->{'address'}' and coin = 'BTC';");
+				}
+				else {											# its a confirmation
+					my $db_update = $dbh->do("update orders set confirmations = $json->{'cmd[data]'}->{'confirmations'}, txid = '$json->{'cmd[data]'}->{'txid'}' where address = '$json->{'cmd[data]'}->{'address'}' and coin = 'BTC';");
+				}
+			}
+
+			# NOTE: BTCLN (Bitcoin Lightning) does not use this method, transactions are confirmed by the client polling shopd while the order is active
+
+			&order_process();									# update order status & notification timestamp
+		}
+
+
+
+
+#####################################################################################################################################################################################################
+# RECEIVE REQUEST/ACTION FROM A CLIENT
+#####################################################################################################################################################################################################
+		
+		&user_lastseen();										# update users lastseen timestamp & get session detail into json response
+		
+		my $config_mtime = (stat("$installdir/shopd.conf"))[9];						# reload config file if its changed
+		if ($config_mtime > $config{'updated'}) {								
+			&config_load("$installdir/shopd.conf");							
+			&config_get();									
+		}										
+
+		$notify->{'message'} = 0;									# get timestamp of last message for this user (or all users)
+		if ($json->{'user'}->{'privilege'} > 0) {
+			my $db_mesg = $dbh->prepare("select max(unix_timestamp(mesg.created)) from mesg left join user as user_rx on user_rx.idx = mesg.user_rx left join user as user_tx on user_tx.idx = mesg.user_tx where (user_rx.idx = $json->{'user'}->{'idx'} or mesg.user_rx = 0) and mesg.status > -1;");
+			my $db_mesg_hits = $db_mesg->execute();
+			if ($db_mesg_hits > 0) {
+				my @db_mesg = $db_mesg->fetchrow_array();
+				$notify->{'message'} = $db_mesg[0];
+			}
+		}
+
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'config_get' ) {							# request for config data
+			&config_get();											
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'user_connect') {							# user connection request, used for logging in with a session cookie
+
+			my $db_query = $dbh->prepare("select idx, username, privilege, unix_timestamp(lastseen) from user where session = PASSWORD('$json->{'session'}');");
+			my $db_query_hits = $db_query->execute();
+			if ($db_query_hits == 1) {									# session authenticated
+				my @db_query = $db_query->fetchrow_array();
+				$json->{'user'}->{'idx'} = $db_query[0];				
+				$json->{'user'}->{'privilege'} = $db_query[2];					
+				$json->{'user_connect'}->{'privilege'} = $db_query[2];					
+				$json->{'user_connect'}->{'lastseen'} = $db_query[3];					
+				$json->{'user_connect'}->{'status'} = 1;
+				$notify->{'users'} = time;								# update notifier timestamp
+			}
+			else {												# failed
+				$json->{'user_connect'}->{'status'} = 0;
+				$json->{'user_connect'}->{'privilege'} = 0;
+			}
+			&config_get();											# append shop config
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'user_login') {							# user login request, used for logging in with username & password
+			my $db_query = $dbh->prepare("select idx, username, privilege from user where username like binary '$json->{'cmd[username]'}' and password = PASSWORD('$json->{'cmd[password]'}');");
+			my $db_query_hits = $db_query->execute();
+			if ($db_query_hits == 1) {									# username & password authenticated
+				my @db_query = $db_query->fetchrow_array();
+				$json->{'user'}->{'idx'}       = $db_query[0];						# NOTE: This should not be returned to the client
+				$json->{'user'}->{'privilege'} = $db_query[2];					
+
+				$json->{'user_login'}->{'idx'} = $db_query[0];						# NOTE: This should not be returned to the client
+				$json->{'user_login'}->{'username'} = $db_query[1];					# NOTE: The client does not need to know the username
+				$json->{'user_login'}->{'privilege'} = $db_query[2];					
+				$json->{'user_login'}->{'lastseen'} = time;				
+		
+				my $newkey = &newkey(64);									# get new session key
+				$json->{'user_login'}->{'session'} = $newkey;							# tell the client
+				my $db_update = $dbh->do("update user set session = PASSWORD('$newkey'), lastseen = now() where idx = $json->{'user_login'}->{'idx'};");	# store hashed session key
+				$json->{'user_login'}->{'status'} = 1;								# report login command success
+
+				$notify->{'users'} = time;									# update notifier timestamp
+			}
+			else {													# failed to authenticate session
+				$json->{'user_login'}->{'status'} = 0;
+			}
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'user_logout') {							# user login request, used for logging in with username & password
+			my $newkey = &newkey(64);									# new session
+			my $db_update = $dbh->do("update user set session = PASSWORD('$newkey') where idx = $json->{'user'}->{'idx'};");	# overwrite/destroy users session 
+			$json->{'user_logout'}->{'status'} = 1;								# success
+			$json->{'user'}->{'privilege'} = 0;								# clear privileges
+			delete($json->{'user'}->{'idx'});								# delete user info from reponse
+			delete($json->{'user'}->{'username'});	
+
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'user_guest') {							# generate a guest user account
+			if ($config{'allow_guest'} == 1) {
+				$json->{'user_guest'}->{'password'} = &newkey(8);					# generate password
+				$json->{'user_guest'}->{'session'} = &newkey(64);					# generate session
+
+				open (ADJECTIVES, "Adjectives.txt") || die ("Cant open Adjectives.txt");		# generate username
+				my @adjectives = <ADJECTIVES>;
+				close (ADJECTIVES);
+				open (ANIMALS, "Animals.txt") || die ("Cant open Animals.txt");
+				my @animals = <ANIMALS>;
+				close (ANIMALS);
+				$json->{'user_guest'}->{'username'} = "$adjectives[int rand(@adjectives)]$animals[int rand(@animals)]";
+				$json->{'user_guest'}->{'username'} =~ s/\n//g;						# strip cr's
+															# store guest account	
+				my $db_update = $dbh->do("insert into user (username, password, session, privilege) values ('$json->{'user_guest'}->{'username'}', PASSWORD('$json->{'user_guest'}->{'password'}'), PASSWORD('$json->{'user_guest'}->{'session'}'), $config{'guest_privilege'});");
+				$json->{'user_guest'}->{'status'} = 1;							# success
+			}
+			else {												# failed, guest users not allowed
+				$json->{'user_guest'}->{'status'} = 0;
+			}
+
+
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'mesg_inbox') {							# get messages
+
+				if ($json->{'user'}->{'privilege'} > 0) {
+
+				my $db_query = $dbh->prepare("select mesg.idx, mesg.status, mesg.type, unix_timestamp(mesg.created), mesg.user_tx, user_tx.username, mesg.user_rx, user_rx.username, mesg.content from mesg left join user as user_rx on user_rx.idx = mesg.user_rx left join user as user_tx on user_tx.idx = mesg.user_tx where (user_rx.idx = $json->{'user'}->{'idx'} or mesg.user_rx = 0) and mesg.status > -1 order by mesg.idx desc limit 10;");
+				$json->{'mesg_inbox'}->{'mesg_count'} = $db_query->execute();
+				$json->{'mesg_inbox'}->{'inbox'} = $db_query->fetchall_arrayref();
+
+														# get timestamp of last message for this user
+				my $db_mesg = $dbh->prepare("select max(unix_timestamp(mesg.created)) from mesg left join user as user_rx on user_rx.idx = mesg.user_rx left join user as user_tx on user_tx.idx = mesg.user_tx where (user_rx.idx = $json->{'user'}->{'idx'} or mesg.user_rx = 0) and mesg.status > -1;");
+				my $db_mesg_hits = $db_mesg->execute();
+				if ($db_mesg_hits > 0) {
+					my @db_mesg = $db_mesg->fetchrow_array();
+					$notify->{'message'} = $db_mesg[0];
+				}
+			}
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'mesg_del') {							# delete message
+
+			my $db_update = $dbh->do("update mesg set status = -1 where idx = $json->{'cmd[mesg_idx]'} and (user_rx = $json->{'user'}->{'idx'} or user_rx = 0);");	# mark message as deleted
+			$json->{'mesg_del'}->{'status'} = 1;
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'mesg_send') {							# send message
+
+			my $db_content = $dbh->quote($json->{'cmd[content]'});
+			my $db_update = $dbh->do("insert into mesg (type, user_tx, user_rx, content, status) values (0, $json->{'user'}->{'idx'}, $json->{'cmd[user_rx]'}, $db_content, 0);");
+			$json->{'mesg_send'}->{'status'} = 1;
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'order_new') {							# place a new order
+
+			my $ordernumber = &newkey(8,'A');								# generate order number
+			my $nodequery;											# get payment detail from relevant node
+			my $txid = '';
+			$json->{'order_new'}->{'conftarget'} = 1;						 	# one confirmation is needed by default, config file can reduce to 0-conf based on fiat amount
+
+			if ( $json->{'cmd[coin]'} =~ m/^ZEC/ ) {							# ZCASH
+				$nodequery = &query_node( $config{'zec_ip'}, $config{'zec_port'}, { 'cmd' => 'order_new', 'ordernumber' => $ordernumber, 'shopname' => $config{'shopname'}, 'coin' => $json->{'cmd[coin]'}, 'coinamount' => $json->{'cmd[coinamount]'} } );
+				if ($json->{'cmd[fiatamount]'} <= $config{'zec_zeroconf'}) {				# allow 0-conf for transaction under the max fiat value allowed
+					$json->{'order_new'}->{'conftarget'} = 0;							 
+				}
+				else {											# set target number of confirmations			
+					$json->{'order_new'}->{'conftarget'} = $config{'zec_minconf'};				
+				}
+			}
+
+			elsif ( $json->{'cmd[coin]'} eq 'BTCLN' ) {							# BITCOIN LIGHTNING NETWORK
+				$nodequery = &query_node( $config{'btcln_ip'}, $config{'btcln_port'}, { 'cmd' => 'order_new', 'ordernumber' => $ordernumber, 'shopname' => $config{'shopname'}, 'coin' => $json->{'cmd[coin]'}, 'coinamount' => $json->{'cmd[coinamount]'} } );
+				$txid = $nodequery->{'address'};
+				if ($json->{'cmd[fiatamount]'} <= $config{'btcln_zeroconf'}) {				# allow 0-conf for transaction under the max fiat value allowed
+					$json->{'order_new'}->{'conftarget'} = 0;							 
+				}
+				else {											# set target number of confirmations			
+					$json->{'order_new'}->{'conftarget'} = $config{'btcln_minconf'};				
+				}
+			}
+
+			elsif ( $json->{'cmd[coin]'} eq 'CASH' ) {							# CASH
+				$nodequery->{'txid'} = 'Cash';
+				$nodequery->{'uri'} = 'Cash';
+				$nodequery->{'address'} = 'Cash';
+			}
+			
+			elsif ( $json->{'cmd[coin]'} eq 'BTC' ) {							# BITCOIN ON-CHAIN
+				$nodequery = &query_node( $config{'btc_ip'}, $config{'btc_port'}, { 'cmd' => 'order_new', 'ordernumber' => $ordernumber, 'shopname' => $config{'shopname'}, 'coin' => $json->{'cmd[coin]'}, 'coinamount' => $json->{'cmd[coinamount]'} } );
+				if ($json->{'cmd[fiatamount]'} <= $config{'btc_zeroconf'}) {				# allow 0-conf for transaction under the max fiat value allowed
+					$json->{'order_new'}->{'conftarget'} = 0;							 
+				}
+				else {											# set target number of confirmations			
+					$json->{'order_new'}->{'conftarget'} = $config{'btc_minconf'};				
+				}
+			}
+				
+			my $db_uri = $dbh->quote($nodequery->{'uri'});								# uri needs to be escaped 
+			my $db_update = $dbh->do("insert into orders( address, ordernumber, user, fiat, fiatamount, coin, coinamount, status, uri, conftarget, txid) values ('$nodequery->{'address'}', '$ordernumber', $json->{'user'}->{'idx'}, '$json->{'cmd[fiat]'}', $json->{'cmd[fiatamount]'}, '$json->{'cmd[coin]'}', $json->{'cmd[coinamount]'}, 0, $db_uri, $json->{'order_new'}->{'conftarget'}, '$txid');");
+
+			$json->{'order_new'}->{'uri'} = $nodequery->{'uri'};
+			$json->{'order_new'}->{'address'} = $nodequery->{'address'};
+			$json->{'order_new'}->{'fiat'} = $json->{'cmd[fiat]'};
+			$json->{'order_new'}->{'fiatamount'} = $json->{'cmd[fiatamount]'};
+			$json->{'order_new'}->{'coin'} = $json->{'cmd[coin]'};
+			$json->{'order_new'}->{'coinamount'} = $json->{'cmd[coinamount]'};
+			$json->{'order_new'}->{'ordernumber'} = $ordernumber;
+			$json->{'order_new'}->{'username'} = $json->{'user'}->{'username'};
+			$json->{'order_new'}->{'order_status'} = 0;								# initial order status
+			$json->{'order_new'}->{'confirmations'} = 0;							 
+
+			$json->{'order_new'}->{'status'} = 1;									# success
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'order_get') {							# return details of ANY order
+
+			my $db_ordernumber = $dbh->quote($json->{'cmd[ordernumber]'});
+
+			my $db_query = $dbh->prepare("select user.username, fiatamount, fiat, coinamount, coin, status, uri, confirmations, conftarget, txid, orders.idx, address from orders left join user on user.idx = orders.user where orders.ordernumber = $db_ordernumber;");
+			my $db_query_hits = $db_query->execute();
+			if ($db_query_hits == 1) {								
+				my @db_query = $db_query->fetchrow_array();
+
+				if ( ($db_query[7] < $db_query[8]) && ($db_query[9] ne '')) {				# order notified & not confirmed, txid exists, so we're going to check the node
+					my $txid;
+
+					print "\n\nDEBUG: COIN = $db_query[4]\n";
+
+					if ( $db_query[4] =~ m/^ZEC/) {							# check zcash node
+						$txid = &query_node( $config{'zec_ip'}, $config{'zec_port'}, { 'cmd' => 'check_conf', 'txid' => $db_query[9] } );	
+
+						if ($txid->{'confirmations'} >= $db_query[8]) {
+							$dbh->do("update orders set status = 2, confirmations = $txid->{'confirmations'}, updated = now() where txid = '$db_query[9]' and coin like 'ZEC%';");
+							$db_query[7] = 1;
+							$db_query[5] = 2;
+							$notify->{'orders'} = time;						# trigger client audio notification if an order has confirmed
+						}
+						else {
+							$dbh->do("update orders set confirmations = $txid->{'confirmations'} where txid = '$db_query[9]' and coin like 'ZEC%';");
+							if ( ($db_query[5] == 0) && ($txid->{'confirmations'} > 0) ) {
+								$db_query[5] = 1;
+								$notify->{'orders'} = time;					# trigger client audio notification on first confirmation 
+							}
+						}
+					}
+
+					elsif ( $db_query[4] eq 'BTCLN') {						# check bitcoin lightning node
+						$txid = &query_node( $config{'btcln_ip'}, $config{'btcln_port'}, { 'cmd' => 'check_conf', 'txid' => $db_query[11] } );		# Note: For LN transactions,  'address' = 'r_hash'
+
+						if ($txid->{'confirmations'} > 0) {						# its confirmed, update db
+							$dbh->do("update orders set confirmations = 1, status = 2 where txid = '$db_query[9]' and idx = $db_query[10];");
+							$db_query[7] = 1;
+							$db_query[5] = 2;
+							$notify->{'orders'} = time;						# trigger client audio notification if an order has confirmed
+						}
+					}
+
+					elsif ( $db_query[4] eq 'BTC') {						# check bitcoin node
+						$txid = &query_node( $config{'btc_ip'}, $config{'btc_port'}, { 'cmd' => 'check_conf', 'txid' => $db_query[9] } );	
+
+						if ($txid->{'confirmations'} >= $db_query[8]) {
+							$dbh->do("update orders set status = 2, confirmations = $txid->{'confirmations'}, updated = now() where txid = '$db_query[9]' and coin like 'BTC';");
+							$db_query[7] = 1;
+							$db_query[5] = 2;
+							$notify->{'orders'} = time;						# trigger client audio notification if an order has confirmed
+						}
+						else {
+							$dbh->do("update orders set confirmations = $txid->{'confirmations'} where txid = '$db_query[9]' and coin like 'BTC';");
+							if ( ($db_query[5] == 0) && ($txid->{'confirmations'} > 0) ) {
+								$db_query[5] = 1;
+								$notify->{'orders'} = time;					# trigger client audio notification on first confirmation 
+							}
+						}
+					}
+				}
+
+				$json->{'order_get'}->{'ordernumber'}   = $json->{'cmd[ordernumber]'};				# package results for client
+				$json->{'order_get'}->{'username'}      = $db_query[0];
+				$json->{'order_get'}->{'fiatamount'}    = $db_query[1];
+				$json->{'order_get'}->{'fiat'}          = $db_query[2];
+				$json->{'order_get'}->{'coinamount'}    = $db_query[3];
+				$json->{'order_get'}->{'coin'}          = $db_query[4];
+				$json->{'order_get'}->{'status'}        = $db_query[5];
+				$json->{'order_get'}->{'uri'}           = $db_query[6];
+				$json->{'order_get'}->{'confirmations'} = $db_query[7];
+				$json->{'order_get'}->{'conftarget'}    = $db_query[8];
+			}
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'order_update') {							# update order status
+
+			my $db_ordernumber = $dbh->quote($json->{'cmd[ordernumber]'});
+
+			if ($json->{'cmd[action]'} eq 'cancel') {							# cancel any order
+				$dbh->do("update orders set status = -1, updated = now() where ordernumber = '$json->{'cmd[ordernumber]'}' and status <= 1;");
+			}
+			elsif ( ($json->{'cmd[action]'} eq 'accept') ) {						# accept cash
+				$dbh->do("update orders set status = 2, updated = now() where ordernumber = '$json->{'cmd[ordernumber]'}' and status >= 0 and coin = 'CASH';");
+			}
+
+			my $db_query = $dbh->prepare("select user.username, fiatamount, fiat, coinamount, coin, status, uri, confirmations, conftarget, txid, orders.idx from orders left join user on user.idx = orders.user where orders.ordernumber = $db_ordernumber;");
+			my $db_query_hits = $db_query->execute();
+			if ($db_query_hits == 1) {
+				my @db_query = $db_query->fetchrow_array(),
+
+				$json->{'order_get'}->{'ordernumber'}   = $json->{'cmd[ordernumber]'};			# package results as 'order_get' for client
+				$json->{'order_get'}->{'username'}      = $db_query[0];
+				$json->{'order_get'}->{'fiatamount'}    = $db_query[1];
+				$json->{'order_get'}->{'fiat'}          = $db_query[2];
+				$json->{'order_get'}->{'coinamount'}    = $db_query[3];
+				$json->{'order_get'}->{'coin'}          = $db_query[4];
+				$json->{'order_get'}->{'status'}        = $db_query[5];
+				$json->{'order_get'}->{'uri'}           = $db_query[6];
+				$json->{'order_get'}->{'confirmations'} = $db_query[7];
+				$json->{'order_get'}->{'conftarget'}    = $db_query[8];
+			}
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'order_list') {							# return a list of all active orders (ie: notified & confirmed)
+
+			my $db_query = $dbh->prepare("select orders.coin, orders.ordernumber, orders.status, user.username, unix_timestamp(orders.updated) from orders left join user on user.idx = orders.user where status > -1 order by orders.idx desc limit 50;");
+			my $db_query_hits = $db_query->execute();
+			if ($db_query_hits > 0) {
+				$json->{'order_list'}->{'order'} = $db_query->fetchall_arrayref();
+			}
+			$json->{'order_list'}->{'status'} = 1;
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'order_user') {							# return a list of all users orders (except for expired orders!)
+			
+			my $db_query = $dbh->prepare("select orders.coin, orders.ordernumber, orders.status, orders.fiatamount, orders.fiat, unix_timestamp(orders.updated) from orders left join user on user.idx = orders.user where user.idx = $json->{'user'}->{'idx'} and status > -2 order by orders.updated desc;");
+			my $db_query_hits = $db_query->execute();
+			if ($db_query_hits > 0) {
+				$json->{'order_user'}->{'order'} = $db_query->fetchall_arrayref();
+			}
+			$json->{'order_user'}->{'status'} = 1;
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'user_list') {							# return a list active users
+			
+			my $db_query = $dbh->prepare("select user.idx, user.username, unix_timestamp(user.lastseen) from user order by user.lastseen desc, user.username limit 20;");
+			my $db_query_hits = $db_query->execute();
+			if ($db_query_hits > 0) {
+				$json->{'user_list'}->{'user'} = $db_query->fetchall_arrayref();
+			}
+			$json->{'user_list'}->{'status'} = 1;
+		}
+
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'status_get') {							# get status of nodes
+
+			$json->{'node'}->{'zec'}->{'status'} = &query_node($config{'zec_ip'}, $config{'zec_port'}, { 'cmd' => 'status_get' } );		
+			$json->{'node'}->{'btc'}->{'status'} = &query_node($config{'btc_ip'}, $config{'btc_port'}, { 'cmd' => 'status_get' } );		
+			$json->{'node'}->{'btcln'}->{'status'} = &query_node($config{'btcln_ip'}, $config{'btcln_port'}, { 'cmd' => 'status_get' } );		
+		}
+
+		###############################################################################################################################################################################################
+		if ($json->{'cmd[req]'} eq 'wallet_balance') {							# get total of orders received for each coin
+
+			my $db_query = $dbh->prepare("select coin, format(sum(coinamount),8), fiat, format(sum(fiatamount),2) from orders where status > 1 and fiat = '$config{'fiat'}' group by coin;");
+			my $db_query_hits = $db_query->execute();
+			if ($db_query_hits > 0) {									
+				$json->{'wallet_balance'} = $db_query->fetchall_arrayref();				
+			}
+		}
+
+		$json->{'notify'} = $notify;										# add notification timestamps to all responses
+
+		foreach my $key (keys %$json) {										# drop all command keys from response
+			if ($key =~ /^cmd/) {
+				delete ($json->{$key});
+			}
+		}
+									
+		delete ($json->{'session'});										# drop session, client already knows
+		delete ($json->{'user'}->{'idx'});									# drop user index, client doesnt need to know
+
+		foreach my $symbol ('BTC', 'ZEC') {									# append exchange rates, returned with every query
+			my $db_query = $dbh->prepare("select rate from exchange where symbol = '$symbol' and created >= date_sub(now(), interval 10 minute) order by idx desc limit 1;");
+			my $db_query_hits = $db_query->execute();
+			if ($db_query_hits == 1) {
+				my @db_query = $db_query->fetchrow_array;						# success, get exchange rate data
+				$json->{'exch'}->{$symbol} = $db_query[0];						# append to outbound json
+				$json->{'exch'}->{'fiat'} = $config{'fiat'};						# add fiat symbol, just in case config was updated
+				$json->{'exch'}->{'status'} = 1;
+			}
+			else {												# failed, no exchange data available
+				$json->{'exch'}->{'status'} = 0;
+			}
+		}
+
+		my $json_tx = encode_json $json;									# JSON encode request
+		$client_socket->send($json_tx);										# send it 
+
+		&debug("\n\n######## RESPONSE ########", $json);
+	}
+}															# we're done, loops back to service next request
+ 
+$json_socket->close();													# shutdown, 'hasta luego' as they say here in the colonies
+exit;														
+
+
+#####################################################################################################################################################################################################
+# Usage: &config_load( $filename );										Load/Reload config file
+#
+sub config_load {
+
+	&debug("config_load()");
+
+	&debug("Loading config file ($_[0])");
+	%config = ();
+	$config{'updated'} = (stat("$_[0]"))[9];
+	open (CONFIG, "$_[0]") || die ("Cant open $_[0]");
+	while (my $line = <CONFIG>) {
+		chop($line);
+		$line =~ s/\#.*//;			
+		my @conf = split('=', $line);
+		$conf[0] =~ s/\s//g;		
+		$conf[1] =~ s/\"//g;	
+		$conf[1] =~ s/^\s//g;
+		$conf[1] =~ s/\s*$//g;	
+		if ($conf[0]) {
+			$config{$conf[0]} = $conf[1];
+			&debug("config_load() : $conf[0] = $conf[1]");
+		}
+	}
+	close (CONFIG);
+}
+
+#####################################################################################################################################################################################################
+# Usage: &config_get();												Respond with config
+#
+sub config_get {
+
+	&debug("config_get()");
+
+	$json->{'config_get'}->{'shopname'}       = $config{'shopname'};									# get config vars into correct types for JSON encoding
+	$json->{'config_get'}->{'fiat'}           = $config{'fiat'};
+	$json->{'config_get'}->{'allow_guest'}    = int($config{'allow_guest'});
+
+	$json->{'node'}->{'zec'}->{'config'}   = &query_node($config{'zec_ip'}, $config{'zec_port'}, { 'cmd' => 'config_get' } );		# query node daemons
+	$json->{'config_get'}->{'zect_allow'}     = int($config{'zect_allow'});
+	$json->{'config_get'}->{'zecz_allow'}     = int($config{'zecz_allow'});
+	$json->{'config_get'}->{'zec_zeroconf'}   = $config{'zec_zeroconf'};
+	$json->{'config_get'}->{'zec_minvalue'}   = $config{'zec_minvalue'};
+	$json->{'config_get'}->{'zec_minconf'}    = int($config{'zec_minconf'});
+	$json->{'config_get'}->{'zec_blocktime'}  = int($config{'zec_blocktime'});
+
+
+	$json->{'node'}->{'btc'}->{'config'}   = &query_node($config{'btc_ip'}, $config{'btc_port'}, { 'cmd' => 'config_get' } );	
+	$json->{'config_get'}->{'btc_allow'}      = int($config{'btc_allow'});
+	$json->{'config_get'}->{'btc_zeroconf'}   = $config{'btc_allow'};
+	$json->{'config_get'}->{'btc_minvalue'}   = $config{'btc_minvalue'};
+	$json->{'config_get'}->{'btc_minconf'}    = int($config{'btc_minconf'});
+	$json->{'config_get'}->{'btc_blocktime'}  = int($config{'btc_blocktime'});
+
+	$json->{'node'}->{'btcln'}->{'config'} = &query_node($config{'btcln_ip'}, $config{'btcln_port'}, { 'cmd' => 'config_get' } );
+	$json->{'config_get'}->{'btcln_allow'}    = int($config{'btcln_allow'});
+	$json->{'config_get'}->{'btcln_zeroconf'} = $config{'btcln_zeroconf'};
+	$json->{'config_get'}->{'btcln_minvalue'} = $config{'btcln_minvalue'};
+
+	if ($json->{'node'}->{'btcln'}->{'config'} != 0) {											# make sure we have valid data before we try using it
+		$json->{'config_get'}->{'btcln_maxvalue'} = $json->{'node'}->{'btcln'}->{'config'}->{'channel_max'}; 					# max BTCLN invoice (BTC Satoshis!)
+	}
+	else {
+		$json->{'config_get'}->{'btcln_maxvalue'} = 0;
+	}
+
+
+		
+	$json->{'config_get'}->{'btcln_minconf'}  = int($config{'btcln_minconf'});
+	$json->{'config_get'}->{'btcln_blocktime'}  = int($config{'btcln_blocktime'});
+
+	$json->{'config_get'}->{'status'}         = 1;												# set success
+
+	$config{'node'}{'zec'}{'config'} = $json->{'node'}->{'zec'}->{'config'};								# cache node configs
+	$config{'node'}{'zec'}{'config'} = $json->{'node'}->{'btc'}->{'config'};
+	$config{'node'}{'zec'}{'config'} = $json->{'node'}->{'btcln'}->{'config'};
+}
+
+#####################################################################################################################################################################################################
+# Usage: &user_lastseen($session);										Update users lastseen timestamp given the session key
+#
+sub user_lastseen() {
+
+	&debug("user_lastseen() : session = $json->{'session'}");
+
+	my $db_query = $dbh->prepare("select idx, username, privilege, unix_timestamp(lastseen), unix_timestamp(registered) from user where session = PASSWORD('$json->{'session'}');");
+	if ($db_query->execute() == 1) {
+		my @db_query = $db_query->fetchrow_array();
+		$json->{'user'}->{'idx'} = $db_query[0];
+		$json->{'user'}->{'username'} = $db_query[1];
+		$json->{'user'}->{'privilege'} = $db_query[2];
+
+		my $db_update = $dbh->do("update user set lastseen = now() where idx = $db_query[0];");
+	}
+	else {
+		$json->{'user'}->{'privilege'} = 0;
+	}
+
+}
+
+#####################################################################################################################################################################################################
+# Usage: &newkey(size, type);											Return a char key, size chars long. Caps chars only if type = A
+#
+sub newkey {
+
+	&debug("new_key()");
+
+	my @chars = ();
+	my $key = '';
+
+	if ($_[1] eq 'A') { @chars = ('A'..'Z'); }								# select which chars are to be used
+	else { @chars = ('A'..'Z', 'a'..'z','0'..'9'); }
+
+	$key .= $chars[rand @chars] for 1..$_[0];								# generate key
+	return($key);
+}
+
+#####################################################################################################################################################################################################
+# Usage: &query_node(ipaddr, port, query);									Query a node
+#
+sub query_node {
+
+	&debug("query_node($_[0], $_[1])", $_[2]);
+
+	my $json_rx;
+
+	my $socket = IO::Socket::INET->new(PeerAddr => $_[0], PeerPort => $_[1], Proto => 'tcp');
+
+	if (!$socket) {												# failed to connect
+		return(0);
+	}
+	else {
+		my $encoded = encode_json $_[2];	
+		$socket->send($encoded);
+		$socket->recv($json_rx, $client_maxbytes);							# read response
+		$socket->close();										# close the socket
+
+		return(decode_json($json_rx));									# return decoded JSON response
+	}
+}
+
+#####################################################################################################################################################################################################
+# Usage: &order_process();										Check all active orders & update 
+#
+sub order_process {
+
+	&debug("order_process()");
+
+	&debug("select idx, coin, txid, confirmations, conftarget, status from orders where status < 2 and txid is not null;");
+	my $db_query = $dbh->prepare("select idx, coin, txid, confirmations, conftarget, status from orders where status < 2 and txid is not null;");	# get all active orders
+	my $db_query_hits = $db_query->execute();
+	my $txid;
+
+	if ($db_query_hits > 0) {
+		while (my @db_query = $db_query->fetchrow_array() ) {
+
+			if ( $db_query[1] =~ m/^ZEC/) {								# check txid (zcash node)
+				$txid = &query_node( $config{'zec_ip'}, $config{'zec_port'}, { 'cmd' => 'check_conf', 'txid' => $db_query[2] } );	
+
+				if (ref($txid) eq "HASH") {
+					if ($txid->{'confirmations'} >= $db_query[4]) {						# conftarget reached (notifications handled by node)
+						$dbh->do("update orders set status = 2, confirmations = $txid->{'confirmations'}, updated = now() where idx = $db_query[0] and status < 2;");
+						$notify->{'orders'} = time;							# trigger client audio notification if an order has confirmed
+					}
+					else {											# conftarget not reached, just update confirmations
+						$dbh->do("update orders set confirmations = $txid->{'confirmations'} where idx = $db_query[0];");
+					}
+				}
+			}
+
+			if ( $db_query[1] eq 'BTC') {								# check txid (bitcoin node)
+				$txid = &query_node( $config{'btc_ip'}, $config{'btc_port'}, { 'cmd' => 'check_conf', 'txid' => $db_query[2] } );	
+
+				if (ref($txid) eq "HASH") {
+					if ($txid->{'confirmations'} >= $db_query[4]) {						# conftarget reached (notifications handled by node)
+						$dbh->do("update orders set status = 2, confirmations = $txid->{'confirmations'}, updated = now() where idx = $db_query[0] and status < 2;");
+						$notify->{'orders'} = time;							# trigger client audio notification if an order has confirmed
+					}
+					else {											# conftarget not reached, just update confirmations
+						$dbh->do("update orders set confirmations = $txid->{'confirmations'} where idx = $db_query[0];");
+					}
+				}
+			}
+
+			# NOTE: BTCLN (Bitcoin Lightning) does not need this method, orders are confirmed directly by the client
+			
+		}
+	}
+														# expire old orders
+	$dbh->do("update orders set status = -2 where status < 1 and status > -1 and  (unix_timestamp(now()) - unix_timestamp(updated)) > $config{'zec_expiry'} and coin like 'ZEC%';");
+	$dbh->do("update orders set status = -2 where status < 1 and status > -1 and  (unix_timestamp(now()) - unix_timestamp(updated)) > $config{'btc_expiry'} and coin = 'BTC';");
+	$dbh->do("update orders set status = -2 where status < 1 and status > -1 and  (unix_timestamp(now()) - unix_timestamp(updated)) > $config{'btcln_expiry'} and coin = 'BTCLN';");
+
+	my $db_notify = $dbh->prepare("select unix_timestamp(max(updated)) from orders where status > 0;");	# update order notifier timestamp
+	my $db_notify_hits = $db_notify->execute();
+	my @db_notify = $db_notify->fetchrow_array();
+	$notify->{'orders'} = $db_notify[0];
+}
+
+#####################################################################################################################################################################################################
+# Usage: &debug(message, var);										Print debugging messages
+#
+sub debug {
+
+	if ($debug > 0) {											# print the message (debug = 1)
+		print "DEBUG : $_[0]\n";
+	}
+
+	if ( ($_[1]) && ($debug > 1)) {										# print the var (debug = 2)
+		print Dumper $_[1];
+	}
+}
+
+
