@@ -1,21 +1,8 @@
-Copyright 2019 ChileBob
+# Installation on Ubuntu Linux (Tested on 16.04.06 'Xenial Xerus')
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
-(the "Software"), to deal in the Software without limitation the rights to use, copy, modify, merge, publish, distribute, 
-sublicence and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+This guide is for installing all Zatsuma components on a single machine.
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITIES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----------------------------------------------------------------------- 8< ----------------------------------------------------------------------
-
-The following instructions are for installation on Ubuntu Linux (Tested on 16.04.06 'Xenial Xerus')
-
-This guide is for installing all zatsuma-0.0.6-rc1 components on a single machine.
+This guide has many steps. It *would* be easier if there was an install script but as installation requires root access and involves other peoples money I'm not keen on the idea. 
 
 Each type of component must run using a different user account to create layers between the outside world (webserver), the
 shop daemon (shopd) and the node daemons (shopd-zec, shopd-btc, shopd-btcln) which have access to nodes where your coins are stored.
@@ -60,8 +47,8 @@ Configure zcash :-
 
 	You must now create a configuration file :-
 	
-	mkdir -p ~.zcash
-	vi .zcash/zcash.conf
+	mkdir -p ~/.zcash
+	vi ~/.zcash/zcash.conf
 
 	The configuration needs to look like this :-
 
