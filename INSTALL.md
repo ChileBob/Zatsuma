@@ -212,7 +212,7 @@ You will need 'root' access to the machine for this installation.
 	If you want zatsuma to use an existing 'transparent' or 'shielded' address for its general purpose wallet, enter them 
 	as shown. You can just ignore this, shopd-zec will create new addresses from your node if required.
 
-## Now run shopd-zec to make sure it can talk to your zacshd node :-
+## Now run shopd-zec to make sure it can talk to your zcash node :-
 
 	./shopd-zec
 
@@ -222,20 +222,14 @@ You will need 'root' access to the machine for this installation.
 	
 	DEBUG: WARNING! zcashd IS NOT RUNNING! Retrying in 60 seconds...
 
-TODO: Turn off debugging in shopd-zec
-
 ## To make the zatsuma daemon for zcash run automatically when your computer starts :-
 
 	crontab -l >mycrontab
-	echo "@reboot /home/yourusername/zatsuma/shopd-zec >/dev/null 2>&1" >>mycrontab
+	echo "@reboot /home/zatsuma/shopd-zec >/dev/null 2>&1" >>mycrontab
 	crontab mycrontab
 	rm mycrontab
 
 ## If you want zatsuma to accept bitcoin on-chain or bitcoin-lightning transactions, install the node daemons :-
-
-	sudo cp /home/zatsuma/zatsuma/shopd-btc/* .
-	sudo cp /home/zatsuma/zatsuma/shopd-btcln/* .
-	sudo chown yourusername.yourusername shopd-btc*
 
 	The shopd-btc.conf file does not need to be changed, unless you want to specify the shop general purpose address.
 
@@ -243,9 +237,9 @@ TODO: Turn off debugging in shopd-zec
 
 	vi shopd-btcln-conf
 
-	Change the last line of shopd-btcln.conf where it says 'REPLACE THIS' with the full path to the lncli client, for example :-
+	Change the last line of shopd-btcln.conf where it says 'REPLACE THIS' with the full path to the lncli client :-
 
-	client = "/home/yourusername/gocode/bin/lncli"
+	client = "/home/zatsuma/gocode/bin/lncli"
 
 
 ## You can now start the zatsuma node daemons, run each of these in a seperate terminal window for now :-
@@ -261,8 +255,8 @@ TODO: Turn off debugging in shopd-zec
 ## To make the zatsuma daemons for bitcoin & lightning run automatically when your computer starts :-
 
 	crontab -l >mycrontab
-	echo "@reboot /home/yourusername/zatsuma/shopd-btc >/dev/null 2>&1" >>mycrontab
-	echo "@reboot /home/yourusername/zatsuma/shopd-btcln >/dev/null 2>&1" >>mycrontab
+	echo "@reboot /home/zatsuma/shopd-btc >/dev/null 2>&1" >>mycrontab
+	echo "@reboot /home/zatsuma/shopd-btcln >/dev/null 2>&1" >>mycrontab
 	crontab mycrontab
 	rm mycrontab
 
@@ -272,7 +266,7 @@ TODO: Turn off debugging in shopd-zec
 
 	Edit the configuration file :-
 
-	vi /home/yourusername/.bitcoin/bitcoin.conf
+	vi /home/zatsuma/.bitcoin/bitcoin.conf
 
 	Add or change the following lines, make sure you use something unique/random for rpcuser & rpcpassword :-
 
@@ -280,7 +274,7 @@ TODO: Turn off debugging in shopd-zec
 	listen=1
 	daemon=1
 	txindex=1
-	walletnotify=/home/yourusername/zatsuma/shopd-btc -notify %s
+	walletnotify=/home/zatsuma/shopd-btc -notify %s
 	rpcuser=YOURrpcUSERNAMEgoesHERE
 	rpcpassword=AreasonablyLONGstringGOEShere
 	zmqpubrawblock=tcp://127.0.0.1:18501
@@ -330,8 +324,8 @@ TODO: Turn off debugging in shopd-zec
 	Now do the following :-
 
 	cd /var/www
-	sudo cp -r /home/zatsuma/zatsuma/webserver/html html
-	sudo cp -r /home/zatsuma/zatsuma/webserver/cgi-bin .
+	sudo cp -r /home/Zatsuma/webserver/html html
+	sudo cp -r /home/Zatsuma/webserver/cgi-bin .
 
 	Now you have to edit the webserver configuration :-
 
