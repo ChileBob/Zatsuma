@@ -1,4 +1,4 @@
-# Installation on Ubuntu Linux (16.04.06)
+# Installation on Ubuntu Linux (18.04.2 LTS)
 
 This guide is for installing all Zatsuma components on a single machine.
 
@@ -20,62 +20,23 @@ You will need 'root' access to the machine for this installation.
 	sudo apt-get update
 	sudo apt-get upgrade
 
-## Create a new user account for zatsuma :-
-
-	sudo adduser zatsuma
-
-## Install zcash :-
-
-	The official documentation for zcash is at https://zcash.readthedocs.io 
-
-	Its an excellent guide, the relevant installation instructions are in the 'Debian Binary Packages Setup' section.
-
-	If you run into problems visit the Zcash Community Forum https://forum.zcashcommunity.com
-
-	Remember that zcashd has to download the its blockchain (approx 25Gb), this takes a long time as its a lot of data
-	and every block has to be verified.
-
-	The install commands are :-
-	
-	sudo apt-get install apt-transport-https wget gnupg2
-	wget -qO - https://apt.z.cash/zcash.asc | sudo apt-key add -
-	echo "deb [arch=amd64] https://apt.z.cash/ jessie main" | sudo tee /etc/apt/sources.list.d/zcash.list
-	sudo apt-get update && sudo apt-get install zcash
-	zcash-fetch-params
-
-## Configure zcash :-
-
-	You must now create a configuration file :-
-	
-	mkdir -p ~/.zcash
-	vi ~/.zcash/zcash.conf
-
-	The configuration needs to look like this :-
-
-	rpcuser=replace_with_a_username
-	rpcpassword=replace_with_a_long_random_string
-	rpcport=8232
-	mainnet=1
-	addnode=mainnet.z.cash
-	walletnotify=/home/yourusername/zatsuma/shopd-zec -notify %s
-
-	(IMPORTANT: Make sure the 'rpcuser', 'rpcpassword', and 'rpcport' are specified)
-
-## Start the zcashd daemon :-
-
-	zcashd --daemon
-
 ## Install all the required packages :-
 
 	sudo apt-get install build-essential
-	sudo apt-get install git -y
-	sudo apt-get install mysql-server		(note down your mysql 'root' password)
-	sudo mysql_secure_installation			
+	sudo apt-get install mysql-server			
+	sudo mysql_secure_installation				(note down your mysql 'root' password)
 	sudo apt-get install libmysqlclient-dev
 	sudo apt-get install apache2
 	sudo apt-get install perl
 	sudo apt-get install libdbi-perl
 	sudo apt-get install libdbd-mysql-perl
+	
+	The following commands install zcash :-
+	
+	sudo apt-get install apt-transport-https wget gnupg2
+	wget -qO - https://apt.z.cash/zcash.asc | sudo apt-key add -
+	echo "deb [arch=amd64] https://apt.z.cash/ jessie main" | sudo tee /etc/apt/sources.list.d/zcash.list
+	sudo apt-get update && sudo apt-get install zcash
 
 ## Upgrade cpan :-
 
@@ -101,37 +62,87 @@ You will need 'root' access to the machine for this installation.
 	sudo cpan install HTML::Entities
 	sudo cpan install Data::Dumper
 
-## Download and extract zatsuma :-
+## Create a new user account for zatsuma & download the latest version :-
 
-	If you have zatsuma as a tarball, do this :-
+	sudo adduser zatsuma					(creates a new user account)
+	sudo apt-get install git				(installs git, needed to download Zatsuma)
+	su - zatsuma						(logs in as the zatsuma user)
+	git clone https://github.com/ChileBob/Zatsuma.git	(downloads latest Zatsuma from Github)
 
-	tar xvf zatsuma-0.0.6-rc2.tar.gz
-	cp zatsuma-0.0.6-rc2/shopd/* .
+## Install & configure zcash :-
+
+	At this point Zcash has been installed on your machine but has not yet been configured.
+	
+	The official documentation for zcash is at https://zcash.readthedocs.io and is an excellent guide,
+	the relevant instructions are in the 'Debian Binary Packages Setup' section.
+
+	If you run into problems visit the Zcash Community Forum https://forum.zcashcommunity.com
+
+	Remember that zcashd has to download the its blockchain (approx 25Gb), this takes a long time as its a lot of data
+	and every block has to be verified.
+
+	Run this command to fetch the zcash parameters for the zatsuma user :-
+		
+	zcash-fetch-params				(this takes a while, its kinda big)
+
+	Now create a configuration file :-
+	
+	mkdir -p ~/.zcash
+	vi ~/.zcash/zcash.conf				(I use 'vi' because I'm old, any text editor will do)
+
+	The configuration needs to look like this :-
+
+	mainnet=1
+	addnode=mainnet.z.cash
+	rpcuser=replace_with_a_username
+	rpcpassword=replace_with_a_long_random_string
+	rpcport=8232
+	walletnotify=/home/zatsuma/shopd-zec -notify %s
+
+	(IMPORTANT: Make sure the 'rpcuser', 'rpcpassword', and 'rpcport' are specified)
+
+	Now start the zcash daemon running in the background :-
+
+	zcashd --daemon
 
 ## Create your mysql database :-
 
+	You cant do this as the 'zatsuma' user as you need 'sudo' privileges on the machine, so exit back to
+	your regular account by typing 'CTRL-D' - ie: hold down the CTRL key & press 'D'
+	
 	Login to mysql as the root user :-
 
-	mysql -u root -p 					(enter your mysql root password when prompted)
+	sudo mysql -u root -p 					(enter your mysql root password when prompted)
 	create database zatsuma;
 	GRANT ALL PRIVILEGES ON zatsuma.* TO 'zatsuma'@'localhost' IDENTIFIED BY 'your zatsuma database password';
 	exit
 
 	Create database tables :-
 
-	mysql zatsuma -u zatsuma -p < zatsuma/zatsuma.sql 	(enter your zatsuma database password when prompted)
+TODO: Got to here :-
 
-## Open a new terminal window and change to the 'zatsuma' user account :-
+	mysql zatsuma -u zatsuma -p < Zatsuma/zatsuma.sql 	(enter your zatsuma database password when prompted)
 
-	sudo su - zatsuma
+## Change back to the 'zatsuma' user account & copy Zatsuma 
 
-	Now open the 'shopd.conf' configuration file with a text editor. I use 'vi' because yes, I'm really that old :-
+	su - zatsuma
+
+	cp Zatsuma/shopd/* .					(main shop daemon, essential)
+	cp Zatsuma/shopd-zec/* .				(zcash node daemon, essential)
+	cp Zatsuma/shopd-btc/* .				(bitcoin node daemon, optional)
+	cp Zatsuma/shopd-btcln/* .				(bitcoin lightning daemon, optional)
+	chmod +x shopd*						(allow the scripts to be executed)
+	
+	Now open the 'shopd.conf' configuration file with a text editor :-
 
 	vi shopd.conf
 
 	You will see various fields with a 'REPLACE ME' tag, these need to be changed to match your setup :=
 
 	shopname = "Choose a short name for your shop"
+	dblogin = "zatsuma"
+	dbname = "zatsuma"
+	dbpassword = "yourZATUMAmysqlPASSWORDgoesHERE"
 
 ## Create a CoinLib account :-
 
@@ -142,7 +153,7 @@ You will need 'root' access to the machine for this installation.
 	Edit the 'shopd.conf' configuration so it shows :-
 
 	coinlib_api = "yourAPIkeyGOEShere"
-
+	
 ## Create a DuckDNS account :-
 
 	Visit https://duckdns.org and create an account, this provides the dynamic DNS service that shopd 
