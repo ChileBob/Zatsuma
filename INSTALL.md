@@ -327,9 +327,11 @@ You will need 'root' access to the machine for this installation.
 	
 	Now do the following :-
 
-	sudo cp -r /home/zatsumaZatsuma/webserver/html /var/www
-	sudo cp -r /home/zatsuma/Zatsuma/webserver/cgi-bin .
+TODO: Got to here, lets provide a config rather than ask the user to edit theirs !
 
+	sudo cp -r /home/zatsumaZatsuma/webserver/* /var/www		(copies all content to your webserver)
+	sudo chmod +x /var/www/cgi-bin/zatsuma.cgi			(makes the zatsuma CGI proxy executable)
+	
 	Now you have to edit the webserver configuration :-
 
 	cd /etc/apache2/sites-enabled
