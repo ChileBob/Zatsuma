@@ -30,18 +30,18 @@ Here's what the checkout looks like :-
 
 ![alt text](https://github.com/ChileBob/Zatsuma/blob/master/screenshots/checkout.png "Zatsuma Checkout")
 
-
 # System Requirements
 
 Server :-
 
-- 8Gb RAM
+- Ubuntu Linux 
+- 8Gb RAM recommended (5Gb minimum)
 - 500Gb Storage (more is better, blockchains are big)
-- Recommend using a laptop
+
+[Installation Guide](https://github.com/ChileBob/Zatsuma/blob/master/INSTALL.md)
 
 Client :-
 
 - Smartphone
 - Tablet
 - Browser
-
