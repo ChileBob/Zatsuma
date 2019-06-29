@@ -18,7 +18,7 @@
 use strict;
 
 my $installdir = "$ENV{'HOME'}";		# default installation directory
-my $debug      = 1;				# debug level (0 = none, 1 = message only, 2 = message + var)
+my $debug      = 0;				# debug level (0 = none, 1 = message only, 2 = message + var)
 
 #####################################################################################################################################################################################################
 # DONT CHANGE ANYTHING BELOW THIS LINE - EVERYTHING YOU NEED IS IN CONFIGURATION FILE shopd-btcln.conf
