@@ -20,12 +20,15 @@ Here's a summary of what it does :-
 - Designed for Zcash (ZEC), both transparent and SHIELDED payments
   ...also supports Bitcoin (BTC) via on-chain or Lightning Network
 
-
 This project has been funded via ZF Grants (https://grants.zfnd.org) - thanks to the Zcash Foundation (https://zfnd.org)
 
 More information and discussion can be found on the Zcash Community Forum, here's a link :-
 
 https://forum.zcashcommunity.com/zcash-point-of-sale-prototype-funded/
+
+Here's what the checkout looks like :-
+
+![alt text](https://github.com/ChileBob/Zatsuma/blob/master/screenshots/checkout.png "Zatsuma Checkout")
 
 
 # System Requirements
