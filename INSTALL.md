@@ -325,31 +325,15 @@ You will need 'root' access to the machine for this installation.
 	
 	You need to do the following with 'sudo' access, so type 'CTRL-D' to exit back to your regular account.
 	
-	Now do the following :-
+	Now change the default website configuration :-
 
-TODO: Got to here, lets provide a config rather than ask the user to edit theirs !
-
-	sudo cp -r /home/zatsumaZatsuma/webserver/* /var/www		(copies all content to your webserver)
+	sudo cp /home/zatsuma/Zatsuma/webserver/000-default.conf /etc/apache2/sites-enabled
+	
+	Now copy all the website components :-
+	
+	sudo cp -r /home/zatsuma/Zatsuma/webserver/* /var/www		(copies all content to your webserver)
 	sudo chmod +x /var/www/cgi-bin/zatsuma.cgi			(makes the zatsuma CGI proxy executable)
 	
-	Now you have to edit the webserver configuration :-
-
-	cd /etc/apache2/sites-enabled
-		
-	Find the following line :-
-
-	DocumentRoot /var/www/html
-
-	Immediatly after that line, add the following :-
-
-	<Directory /var/www/cgi-bin/>
-		AllowOverride ALL
-		Options +ExecCGI
-		AddHandler cgi-script .cgi
-	</Directory>
-
-	ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
-
 	Now enable the apache2 module for cgi-scripts and restart the server :-
 
 	sudo a2enmod cgi
@@ -358,8 +342,18 @@ TODO: Got to here, lets provide a config rather than ask the user to edit theirs
 
 ## Congratulations! You have just installed zatsuma on your computer :-)
 
-	To confirm everything is working, visit http://127.0.0.1 and login with your 'admin' account
-
+	To confirm everything is working, visit http://127.0.0.1 
+	
+	If 'shopd' is not running you'll get the 'Technical Difficulties' page, so :-
+	
+	su - zatsuma
+	./shopd
+	
+	At this stage your zcash node is probably still synchronising with the network (bitcoin certainly is!)
+	so the only payment option on the checkout will be 'Cash'. 
+	
+	When the nodes are ready the other coins appear automatically.
+	
 
 ## Now its time to go public, allowing access your zatsuma shop from anywhere on the net :-
 
@@ -394,10 +388,18 @@ TODO: Got to here, lets provide a config rather than ask the user to edit theirs
 	    - Network Configuration
 	      - Port Forwarding
 
+	FRIENDLY REMINDER :-
+	
+	You can contribute to the Zcash network by making your node publicly visible, this allows other nodes to 
+	connect and syncronise from yours and this strengthens the network. Its a nice thing to do but will obviously
+	use some of your internet connection.
+	
+	To do this, forward port 8233 to your reserved LAN IP address
+
 	
 	IMPORTANT !!!!!
 
-	The users of your shop are going to expect PRIVACY so you MUST encrypt your webserver traffic.
+	The users of your shop are going to expect PRIVACY so you MUST ENCRYPT YOUR WEBSERVER CONNECTION
 
 	Its very easy to get SSL certificates installed on your computer :-
 	
