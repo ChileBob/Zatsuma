@@ -319,13 +319,16 @@ You will need 'root' access to the machine for this installation.
 	
 ## You now have to configure your apache2 webserver, this assumes you do not have any websites installed on your machine.
 
-	Confirm your webserver is running by visiting http://127.0.0.1 (you should see a 'Default Page')
+	Confirm your webserver is running by visiting http://127.0.0.1 (you should see the 'Apache2 Ubuntu Default Page')
 
+	IMPORTANT: If your webserver is already set up to do something else DONT DO THIS - it replaces EVERYTHING !
+	
+	You need to do the following with 'sudo' access, so type 'CTRL-D' to exit back to your regular account.
+	
 	Now do the following :-
 
-	cd /var/www
-	sudo cp -r /home/Zatsuma/webserver/html html
-	sudo cp -r /home/Zatsuma/webserver/cgi-bin .
+	sudo cp -r /home/zatsumaZatsuma/webserver/html /var/www
+	sudo cp -r /home/zatsuma/Zatsuma/webserver/cgi-bin .
 
 	Now you have to edit the webserver configuration :-
 
