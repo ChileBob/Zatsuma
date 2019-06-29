@@ -168,7 +168,7 @@ You will need 'root' access to the machine for this installation.
 
 	./shopd
 
-	IMPORTANT: Make a node of the admin username & password, its encrypted and cannot be retreived later.
+	IMPORTANT: Make a note of the admin username & password, its encrypted and cannot be retreived later.
 
 	If everything has worked you will see the following message :-
 
@@ -179,16 +179,14 @@ You will need 'root' access to the machine for this installation.
 	crontab -l >mycrontab
 	echo "@reboot /home/zatsuma/shopd >/dev/null 2>&1" >>mycrontab
 	crontab mycrontab
-	rm crontab
-
-TODO: Got to here, need to turn off debugging in shopd
+	rm mycrontab
 
 ## Now confirm dynamic dns is working :-
 
 	./shopd -duckdns
 	host yourdomainname.duckdns.org			(This should show your public IP address)
 
-	Now confirm coinlib is working :-
+## Now confirm coinlib is working :-
 
 	./shopd -coinlib
 	mysql zatsuma -u zatsuma -p			(enter your zatsuma mysql password when prompted)
@@ -205,30 +203,26 @@ TODO: Got to here, need to turn off debugging in shopd
 
 	Congratulations! You have now installed shopd :-)
 
-## Now install shopd-zec, to do that open a terminal as your regular username :-
+## Now configure shopd-zec :-
 
-	mkdir zatsuma
-	cd zatsuma
-
-## Now copy the zatsuma node daemon for zcash and its configuration file :-
-
-	sudo cp /home/zatsuma/zatsuma/shopd-zec/* .
-	sudo chown yourusername.yourusername shopd-zec*
-
-	There is very little to configure here, but its worth checking the config anyway :-
+	There is very little to configure here, but lets check it anyway so you can see whats going on :-
 
 	vi shopd-zec.conf
 
 	If you want zatsuma to use an existing 'transparent' or 'shielded' address for its general purpose wallet, enter them 
 	as shown. You can just ignore this, shopd-zec will create new addresses from your node if required.
 
-## Now run shopd-zec to make sure its working :-
+## Now run shopd-zec to make sure it can talk to your zacshd node :-
 
 	./shopd-zec
 
-## If your zcashd node is not running or has not yet syncronised you will see the following message :-
+	When you run this for the first time it will automatically generate default 'taddr' and 'zaddr' addresses for your shop.
+	
+	Your zcashd node is probably not yet syncronised so you'll also see the following message :-
 	
 	DEBUG: WARNING! zcashd IS NOT RUNNING! Retrying in 60 seconds...
+
+TODO: Turn off debugging in shopd-zec
 
 ## To make the zatsuma daemon for zcash run automatically when your computer starts :-
 
