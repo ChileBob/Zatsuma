@@ -1,4 +1,4 @@
-# Installation on Ubuntu Linux (Tested on 16.04.06 'Xenial Xerus')
+# Installation on Ubuntu Linux (16.04.06)
 
 This guide is for installing all Zatsuma components on a single machine.
 
