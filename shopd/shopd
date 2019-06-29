@@ -18,7 +18,7 @@
 use strict;
 
 my $installdir = "$ENV{'HOME'}";											# Default installation directory 
-my $debug = 1;														# debugging level (0 = off, 1 = print message, 2 = pring message & var)
+my $debug = 0;														# debugging level (0 = off, 1 = print message, 2 = pring message & var)
 
 use utf8;
 use IO::Socket::INET;													# network socket service
