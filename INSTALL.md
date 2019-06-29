@@ -117,11 +117,9 @@ You will need 'root' access to the machine for this installation.
 	GRANT ALL PRIVILEGES ON zatsuma.* TO 'zatsuma'@'localhost' IDENTIFIED BY 'your zatsuma database password';
 	exit
 
-	Create database tables :-
+	Create the zatsuma database tables :-
 
-TODO: Got to here :-
-
-	mysql zatsuma -u zatsuma -p < Zatsuma/zatsuma.sql 	(enter your zatsuma database password when prompted)
+	mysql zatsuma -u zatsuma -p < Zatsuma/shopd/zatsuma.sql (enter your zatsuma database password when prompted)
 
 ## Change back to the 'zatsuma' user account & copy Zatsuma 
 
@@ -182,6 +180,8 @@ TODO: Got to here :-
 	echo "@reboot /home/zatsuma/shopd >/dev/null 2>&1" >>mycrontab
 	crontab mycrontab
 	rm crontab
+
+TODO: Got to here, need to turn off debugging in shopd
 
 ## Now confirm dynamic dns is working :-
 
