@@ -161,7 +161,7 @@ You will need 'root' access to the machine for this installation.
 
 	Register your domain and edit the 'shopd.conf' configuration file so it shows :-
 
-	duckdns_domain = "yourDOMAINname"
+	duckdns_domain = "yourDOMAINname"		(NOTE: Just your domain, WITHOUT the .duckdns.org part)
 	duckdns_token = "yourDUCKDNStoken"
 
 ## Now run 'shopd' for the first time to create an 'admin' user account :-
