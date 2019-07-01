@@ -78,8 +78,7 @@ You will need 'root' access to the machine for this installation.
 
 	If you run into problems visit the Zcash Community Forum https://forum.zcashcommunity.com
 
-	Remember that zcashd has to download the its blockchain (approx 25Gb), this takes a long time as its a lot of data
-	and every block has to be verified.
+	Remember that zcashd has to download the its blockchain (approx 25Gb), this takes a long time.
 
 	Run this command to fetch the zcash parameters for the zatsuma user :-
 		
