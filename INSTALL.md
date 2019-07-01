@@ -2,7 +2,7 @@
 
 This guide is for installing all Zatsuma components on a single machine.
 
-This guide has many steps. It *would* be easier if there was an install script but as installation requires root access and involves other peoples money I'm not keen on the idea. 
+It *would* be easier if there was an install script but as installation requires root access and involves other peoples money I'm not keen on the idea. 
 
 Each type of component must run using a different user account to create layers between the outside world (webserver), the
 shop daemon (shopd) and the node daemons (shopd-zec, shopd-btc, shopd-btcln) which have access to nodes where your coins are stored.
