@@ -1,8 +1,6 @@
-# Manual Zatsuma Installation for Ubuntu Linux (18.04.2 LTS)
+# Installation for Ubuntu Linux (18.04)
 
-This guide is for manually installing Zatsuma on a single machine.
-
-There is a simpler way to create a new installation :-
+## The simple way - use the install script
 
 	sudo apt-get update					(updates your machine)
 	sudo apt-get upgrade
@@ -11,7 +9,7 @@ There is a simpler way to create a new installation :-
 	sudo ./Zatsuma/setup					(runs installation script)
 
 
-Having said that, here's how you would install it manually :-
+## The hard way - doing it manually
 
 Each type of component must run using a different user account to create layers between the outside world (webserver), the
 shop daemon (shopd) and the node daemons (shopd-zec, shopd-btc, shopd-btcln) which have access to nodes where your coins are stored.
