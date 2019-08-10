@@ -12,7 +12,9 @@
 	sudo apt-get upgrade
 	sudo apt-get install git				(installs git, needed to download Zatsuma)
 	git clone https://github.com/ChileBob/Zatsuma.git	(downloads latest Zatsuma from Github)
-	sudo ./Zatsuma/setup					(runs installation script)
+	cd Zatsuma
+	chmod +x setup
+	sudo ./setup						(runs installation script)
 
 
 ## The hard way - do it manually
