@@ -299,7 +299,7 @@ echo "...restarting webserver"
 systemctl daemon-reload
 service apache2 restart
 
-if [ -z "$duckdns_domain" ]
+if [ ! -z "$duckdns_domain" ]
 then
 	CERTBOT=`which certbot`						# check certbot has been installed
 	if [ -z "$CERTBOT" ]
