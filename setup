@@ -258,7 +258,9 @@ fi
 chmod +x /usr/local/bin/zatsuma/*			# make daemons executable
 
 echo "...creating empty zatsuma database, please enter your MYSQL root password :-"
-echo -e "drop database zatsuma;\ncreate database zatsuma;\nGRANT ALL PRIVILEGES ON zatsuma.* TO 'zatsuma'@'localhost' IDENTIFIED BY '$mysql_zatsuma';\nuse zatsuma;" >/tmp/zatsuma.sql
+
+# Note: Really needs to archive & drop any existing database
+echo -e "create database zatsuma;\nGRANT ALL PRIVILEGES ON zatsuma.* TO 'zatsuma'@'localhost' IDENTIFIED BY '$mysql_zatsuma';\nuse zatsuma;" >/tmp/zatsuma.sql
 cat shopd/zatsuma.sql >>/tmp/zatsuma.sql
 mysql -u root -p < /tmp/zatsuma.sql
 	
