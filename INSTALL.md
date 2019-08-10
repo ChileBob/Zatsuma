@@ -1,8 +1,17 @@
-# Installation on Ubuntu Linux (18.04.2 LTS)
+# Manual Zatsuma Installation for Ubuntu Linux (18.04.2 LTS)
 
-This guide is for installing all Zatsuma components on a single machine.
+This guide is for manually installing Zatsuma on a single machine.
 
-It *would* be easier if there was an install script but as installation requires root access and involves other peoples money I'm not keen on the idea. 
+There is a simpler way to create a new installation :-
+
+	sudo apt-get update					(updates your machine)
+	sudo apt-get upgrade
+	sudo apt-get install git				(installs git, needed to download Zatsuma)
+	git clone https://github.com/ChileBob/Zatsuma.git	(downloads latest Zatsuma from Github)
+	sudo ./Zatsuma/setup					(runs installation script)
+
+
+Having said that, here's how you would install it manually :-
 
 Each type of component must run using a different user account to create layers between the outside world (webserver), the
 shop daemon (shopd) and the node daemons (shopd-zec, shopd-btc, shopd-btcln) which have access to nodes where your coins are stored.
@@ -14,7 +23,7 @@ You will need 'root' access to the machine for this installation.
 	Ubuntu/Debian Linux (64-bit)
 	5Gb RAM (minimum), 8Gb (recommended)
 	Lots of disk space
-	
+
 ## Login as your regular username, open a terminal & update your machine :-
 
 	sudo apt-get update
@@ -61,12 +70,15 @@ You will need 'root' access to the machine for this installation.
 	sudo cpan install HTML::Restrict
 	sudo cpan install HTML::Entities
 	sudo cpan install Data::Dumper
+	sudo cpan install List::Util
 
 ## Create a new user account for zatsuma & download the latest version :-
 
 	sudo adduser zatsuma					(creates a new user account)
 	sudo apt-get install git				(installs git, needed to download Zatsuma)
 	su - zatsuma						(logs in as the zatsuma user)
+	mkdir .zatsuma						(creates a directory for zatsuma config)
+			
 	git clone https://github.com/ChileBob/Zatsuma.git	(downloads latest Zatsuma from Github)
 
 ## Install & configure zcash :-
@@ -96,7 +108,7 @@ You will need 'root' access to the machine for this installation.
 	rpcuser=replace_with_a_username
 	rpcpassword=replace_with_a_long_random_string
 	rpcport=8232
-	walletnotify=/home/zatsuma/shopd-zec -notify %s
+	walletnotify=/usr/local/bin/zatsuma/shopd-zec -notify %s
 
 	(IMPORTANT: Make sure the 'rpcuser', 'rpcpassword', and 'rpcport' are specified)
 
@@ -120,19 +132,18 @@ You will need 'root' access to the machine for this installation.
 
 	mysql zatsuma -u zatsuma -p < Zatsuma/shopd/zatsuma.sql (enter your zatsuma database password when prompted)
 
-## Change back to the 'zatsuma' user account & copy Zatsuma 
+## Copy zatsuma daemons
 
-	su - zatsuma
-
-	cp Zatsuma/shopd/* .					(main shop daemon, essential)
-	cp Zatsuma/shopd-zec/* .				(zcash node daemon, essential)
-	cp Zatsuma/shopd-btc/* .				(bitcoin node daemon, optional)
-	cp Zatsuma/shopd-btcln/* .				(bitcoin lightning daemon, optional)
-	chmod +x shopd*						(allow the scripts to be executed)
+	mkdir -p /usr/local/bin/zatsuma
+	cp Zatsuma/shopd/*.txt Zatsuma/shopd/shopd /usr/local/bin/zatsuma	(main shop daemon, essential)
+	cp Zatsuma/shopd-zec/shopd-zec /usr/local/bin/zatsuma			(zcash node daemon, essential)
+	cp Zatsuma/shopd-btc/shopd-zec /usr/local/bin/zatsuma			(bitcoin node daemon, optional)
+	cp Zatsuma/shopd-btcln/shopd-zec /usr/local/bin/zatsuma			(bitcoin lightning daemon, optional)
+	chmod +x /usr/local/bin/zatsuma/*					(allow the scripts to be executed)
 	
 	Now open the 'shopd.conf' configuration file with a text editor :-
 
-	vi shopd.conf
+	vi /home/zatsuma/.zatsuma/shopd.conf
 
 	You will see various fields with a 'REPLACE ME' tag, these need to be changed to match your setup :=
 
@@ -165,7 +176,7 @@ You will need 'root' access to the machine for this installation.
 
 ## Now run 'shopd' for the first time to create an 'admin' user account :-
 
-	./shopd
+	/usr/local/bin/shopd
 
 	IMPORTANT: Make a note of the admin username & password, its encrypted and cannot be retreived later.
 
@@ -176,18 +187,18 @@ You will need 'root' access to the machine for this installation.
 	Now make shopd run automatically when your machine starts :-
 
 	crontab -l >mycrontab
-	echo "@reboot /home/zatsuma/shopd >/dev/null 2>&1" >>mycrontab
+	echo "@reboot /usr/local/bin/zatsuma/shopd >/dev/null 2>&1" >>mycrontab
 	crontab mycrontab
 	rm mycrontab
 
 ## Now confirm dynamic dns is working :-
 
-	./shopd -duckdns
+	/usr/local/bin/zatsuma/shopd -duckdns		(This registers your IP address with DuckDNS)
 	host yourdomainname.duckdns.org			(This should show your public IP address)
 
 ## Now confirm coinlib is working :-
 
-	./shopd -coinlib
+	/usr/local/bin/zatsuma/shopd -coinlib		(Collects current ZEC & BTC prices from CoinLib)
 	mysql zatsuma -u zatsuma -p			(enter your zatsuma mysql password when prompted)
 	select * from exchange;				(This should give you the current ZEC & BTC prices)
 	exit
@@ -195,8 +206,8 @@ You will need 'root' access to the machine for this installation.
 ## Assuming everything is working, make shopd run at regular intervals to refresh this data :-
 
 	crontab -l >mycrontab
-	echo "* * * * * /home/zatsuma/shopd -coinlib >/dev/null 2>&1" >>mycrontab
-	echo "*/3 * * * * /home/zatsuma/shopd -duckdns >/dev/null 2>&1" >>mycrontab
+	echo "* * * * * /usr/local/bin/zatsuma/shopd -coinlib >/dev/null 2>&1" >>mycrontab
+	echo "*/3 * * * * /usr/local/bin/zatsuma/shopd -duckdns >/dev/null 2>&1" >>mycrontab
 	crontab mycrontab
 	rm mycrontab
 
@@ -213,7 +224,7 @@ You will need 'root' access to the machine for this installation.
 
 ## Now run shopd-zec to make sure it can talk to your zcash node :-
 
-	./shopd-zec
+	/usr/local/bin/zatsuma/shopd-zec
 
 	When you run this for the first time it will automatically generate default 'taddr' and 'zaddr' addresses for your shop.
 	
@@ -224,7 +235,7 @@ You will need 'root' access to the machine for this installation.
 ## To make the zatsuma daemon for zcash run automatically when your computer starts :-
 
 	crontab -l >mycrontab
-	echo "@reboot /home/zatsuma/shopd-zec >/dev/null 2>&1" >>mycrontab
+	echo "@reboot /usr/local/bin/zatsuma/shopd-zec >/dev/null 2>&1" >>mycrontab
 	crontab mycrontab
 	rm mycrontab
 
@@ -243,8 +254,8 @@ You will need 'root' access to the machine for this installation.
 
 ## You can now start the zatsuma node daemons, run each of these in a seperate terminal window for now :-
 
-	./shopd-btc
-	./shopd-btcln
+	/usr/local/bin/zatsuma/shopd-btc
+	/usr/local/bin//shopd-btcln
 
 	Until the Bitcoin/Lightning nodes are installed, running and synchronised you will get the following warnings :-
 
@@ -254,8 +265,8 @@ You will need 'root' access to the machine for this installation.
 ## To make the zatsuma daemons for bitcoin & lightning run automatically when your computer starts :-
 
 	crontab -l >mycrontab
-	echo "@reboot /home/zatsuma/shopd-btc >/dev/null 2>&1" >>mycrontab
-	echo "@reboot /home/zatsuma/shopd-btcln >/dev/null 2>&1" >>mycrontab
+	echo "@reboot /usr/local/bin/zatsuma/shopd-btc >/dev/null 2>&1" >>mycrontab
+	echo "@reboot /usr/local/bin/zatsuma/shopd-btcln >/dev/null 2>&1" >>mycrontab
 	crontab mycrontab
 	rm mycrontab
 
@@ -273,7 +284,7 @@ You will need 'root' access to the machine for this installation.
 	listen=1
 	daemon=1
 	txindex=1
-	walletnotify=/home/zatsuma/shopd-btc -notify %s
+	walletnotify=/usr/local/bin/zatsuma/shopd-btc -notify %s
 	rpcuser=YOURrpcUSERNAMEgoesHERE
 	rpcpassword=AreasonablyLONGstringGOEShere
 	zmqpubrawblock=tcp://127.0.0.1:18501
@@ -287,7 +298,7 @@ You will need 'root' access to the machine for this installation.
 
 	Confirm where it has been installed :-
 
-	which bitcoind					(probably /usr/local/bin/bitcoind)
+	which bitcoind							(probably /usr/local/bin/bitcoind)
 
 	Now do the following :-
 	
@@ -326,11 +337,11 @@ You will need 'root' access to the machine for this installation.
 	
 	Now change the default website configuration :-
 
-	sudo cp /home/zatsuma/Zatsuma/webserver/000-default.conf /etc/apache2/sites-enabled
+	sudo cp Zatsuma/webserver/000-default.conf /etc/apache2/sites-enabled
 	
 	Now copy all the website components :-
 	
-	sudo cp -r /home/zatsuma/Zatsuma/webserver/* /var/www		(copies all content to your webserver)
+	sudo cp -r Zatsuma/webserver/* /var/www				(copies all content to your webserver)
 	sudo chmod +x /var/www/cgi-bin/zatsuma.cgi			(makes the zatsuma CGI proxy executable)
 	
 	Now enable the apache2 module for cgi-scripts and restart the server :-
@@ -346,7 +357,7 @@ You will need 'root' access to the machine for this installation.
 	If 'shopd' is not running you'll get the 'Technical Difficulties' page, so :-
 	
 	su - zatsuma
-	./shopd
+	/usr/local/bin/zatsuma/shopd
 	
 	At this stage your zcash node is probably still synchronising with the network (bitcoin certainly is!)
 	so the only payment option on the checkout will be 'Cash'. 

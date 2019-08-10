@@ -13,11 +13,11 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITIES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
 # OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# Version 0.0.6-rc2
+# Version 0.0.6-rc3
 
 use strict;
 
-my $installdir = "$ENV{'HOME'}";		# Default install directory
+my $installdir = "$ENV{'HOME'}/.zatsuma";	# Default install directory
 my $debug      = 0;				# debug level (0 = none, 1 = message only, 2 = message + var)
 
 #####################################################################################################################################################################################################
