@@ -1,6 +1,12 @@
 # Installation for Ubuntu Linux (18.04)
 
-## The simple way - use the install script
+# Requirements :-
+
+	Ubuntu/Debian Linux (64-bit)
+	5Gb RAM (minimum), 8Gb (recommended)
+	Lots of disk space (Zcash 30Gb, Bitcoin 250Gb)
+	
+## The easy way - use the install script
 
 	sudo apt-get update					(updates your machine)
 	sudo apt-get upgrade
@@ -9,18 +15,12 @@
 	sudo ./Zatsuma/setup					(runs installation script)
 
 
-## The hard way - doing it manually
+## The hard way - do it manually
 
 Each type of component must run using a different user account to create layers between the outside world (webserver), the
 shop daemon (shopd) and the node daemons (shopd-zec, shopd-btc, shopd-btcln) which have access to nodes where your coins are stored.
 
 You will need 'root' access to the machine for this installation.
-
-# Requirements :-
-
-	Ubuntu/Debian Linux (64-bit)
-	5Gb RAM (minimum), 8Gb (recommended)
-	Lots of disk space
 
 ## Login as your regular username, open a terminal & update your machine :-
 
