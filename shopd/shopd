@@ -13,11 +13,11 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITIES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
 # OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# Version 0.0.6-rc2
+# Version 0.0.6-rc3
 
 use strict;
 
-my $installdir = "$ENV{'HOME'}";											# Default installation directory 
+my $installdir = "$ENV{'HOME'}/.zatsuma";										# Default installation directory 
 my $debug = 0;														# debugging level (0 = off, 1 = print message, 2 = pring message & var)
 
 use utf8;
@@ -31,6 +31,7 @@ use String::HexConvert ':all';												# used to decode raw zaddr memos
 use HTML::Restrict;													# strips html tags from strings, used when reading zaddr memos
 use HTML::Entities;													# converts ascii to html entities for strange chars, used for messages
 use Data::Dumper;													# useful for debugging
+use List::Util qw(shuffle);												# general utility list subs
 
 my $config_updated;													# last modified timestamp for shopd.conf
 my %config = ();													# shop configuration
@@ -57,6 +58,23 @@ if (!$dbh) {															# confirm connection
 }
 $dbh->{mysql_auto_reconnect} = 1;											# auto reconnect to mysql
 
+
+my $password_policy;													# mysql password policy
+my $db_query = $dbh->prepare("show variables like 'validate_password%';");						# get current policy
+my $db_query_hits = $db_query->execute();
+if ($db_query_hits > 0) {
+	while (my @row = $db_query->fetchrow_array() ) {
+		$password_policy->{$row[0]} = $row[1];	
+	}
+}
+else {															# no policy, invent one
+	$password_policy->{'validate_password_number_count'} = 1;							# min numberics
+	$password_policy->{'validate_password_mixed_case_count'} = 1;							# min upper/lower case
+	$password_policy->{'validate_password_special_char_count'} = 1;							# min special chars
+	$password_policy->{'validate_password_length'} = 8;								# min length
+}
+
+
 my $db_query = $dbh->prepare("select * from user where privilege = 100;");						# make sure there's an admin user
 my $db_query_hits = $db_query->execute();
 
@@ -66,7 +84,8 @@ if ($db_query_hits < 1) {												# nope, so create one with a random passwor
 	my $db_newsession = $dbh->quote(&newkey(64));
 
 	my $db_update = $dbh->do("insert into user (username, password, privilege, session) values ('admin', PASSWORD($db_value), 100, PASSWORD($db_newsession));");
-	print "User 'admin' created, password '$newpassword'\n";
+	print "Zatsuma ADMIN account created, username: 'admin', password '$newpassword'\n";
+	exit;														# exit so this can be used by the install script
 }
 
 											
@@ -294,21 +313,28 @@ while(1) { 													# MAIN LOOP
 		###############################################################################################################################################################################################
 		if ($json->{'cmd[req]'} eq 'user_connect') {							# user connection request, used for logging in with a session cookie
 
-			my $db_query = $dbh->prepare("select idx, username, privilege, unix_timestamp(lastseen) from user where session = PASSWORD('$json->{'session'}');");
-			my $db_query_hits = $db_query->execute();
-			if ($db_query_hits == 1) {									# session authenticated
-				my @db_query = $db_query->fetchrow_array();
-				$json->{'user'}->{'idx'} = $db_query[0];				
-				$json->{'user'}->{'privilege'} = $db_query[2];					
-				$json->{'user_connect'}->{'privilege'} = $db_query[2];					
-				$json->{'user_connect'}->{'lastseen'} = $db_query[3];					
-				$json->{'user_connect'}->{'status'} = 1;
-				$notify->{'users'} = time;								# update notifier timestamp
+			if ( $json->{'session'} ne 'none') {
+				my $db_query = $dbh->prepare("select idx, username, privilege, unix_timestamp(lastseen) from user where session = PASSWORD('$json->{'session'}');");
+				my $db_query_hits = $db_query->execute();
+				if ($db_query_hits == 1) {								# session authenticated
+					my @db_query = $db_query->fetchrow_array();
+					$json->{'user'}->{'idx'} = $db_query[0];				
+					$json->{'user'}->{'privilege'} = $db_query[2];					
+					$json->{'user_connect'}->{'privilege'} = $db_query[2];					
+					$json->{'user_connect'}->{'lastseen'} = $db_query[3];					
+					$json->{'user_connect'}->{'status'} = 1;
+					$notify->{'users'} = time;							# update notifier timestamp
+				}
+				else {											# failed
+					$json->{'user_connect'}->{'status'} = 0;
+					$json->{'user_connect'}->{'privilege'} = 0;
+				}
 			}
-			else {												# failed
+			else {												# no session from client
 				$json->{'user_connect'}->{'status'} = 0;
 				$json->{'user_connect'}->{'privilege'} = 0;
 			}
+	
 			&config_get();											# append shop config
 		}
 
@@ -355,10 +381,10 @@ while(1) { 													# MAIN LOOP
 				$json->{'user_guest'}->{'password'} = &newkey(8);					# generate password
 				$json->{'user_guest'}->{'session'} = &newkey(64);					# generate session
 
-				open (ADJECTIVES, "Adjectives.txt") || die ("Cant open Adjectives.txt");		# generate username
+				open (ADJECTIVES, "$installdir/Adjectives.txt") || die ("Cant open $installdir/Adjectives.txt");	# generate username
 				my @adjectives = <ADJECTIVES>;
 				close (ADJECTIVES);
-				open (ANIMALS, "Animals.txt") || die ("Cant open Animals.txt");
+				open (ANIMALS, "$installdir/Animals.txt") || die ("Cant open $installdir/Animals.txt");
 				my @animals = <ANIMALS>;
 				close (ANIMALS);
 				$json->{'user_guest'}->{'username'} = "$adjectives[int rand(@adjectives)]$animals[int rand(@animals)]";
@@ -749,17 +775,24 @@ sub user_lastseen() {
 
 	&debug("user_lastseen() : session = $json->{'session'}");
 
-	my $db_query = $dbh->prepare("select idx, username, privilege, unix_timestamp(lastseen), unix_timestamp(registered) from user where session = PASSWORD('$json->{'session'}');");
-	if ($db_query->execute() == 1) {
-		my @db_query = $db_query->fetchrow_array();
-		$json->{'user'}->{'idx'} = $db_query[0];
-		$json->{'user'}->{'username'} = $db_query[1];
-		$json->{'user'}->{'privilege'} = $db_query[2];
+	print "DEBUG: session = $json->{'session'}\n";
 
-		my $db_update = $dbh->do("update user set lastseen = now() where idx = $db_query[0];");
-	}
-	else {
+	if ($json->{'session'} eq 'none') {									# no session, so no privileges
 		$json->{'user'}->{'privilege'} = 0;
+	}
+	else {													# we have a session, look up the user
+		my $db_query = $dbh->prepare("select idx, username, privilege, unix_timestamp(lastseen), unix_timestamp(registered) from user where session = PASSWORD('$json->{'session'}');");
+		if ($db_query->execute() == 1) {
+			my @db_query = $db_query->fetchrow_array();
+			$json->{'user'}->{'idx'} = $db_query[0];
+			$json->{'user'}->{'username'} = $db_query[1];
+			$json->{'user'}->{'privilege'} = $db_query[2];
+	
+			my $db_update = $dbh->do("update user set lastseen = now() where idx = $db_query[0];");
+		}
+		else {
+			$json->{'user'}->{'privilege'} = 0;
+		}
 	}
 
 }
@@ -769,13 +802,42 @@ sub user_lastseen() {
 #
 sub newkey {
 
-	&debug("new_key()");
+	my $key = '';
+
+	if ($_[1]) {												# specific key type wanted
+		return(keygen($_[0], $_[1]));
+	}
+	else {													# key will conform to mysql password policy
+		$key .= &keygen( $password_policy->{'validate_password_number_count'}, '0');			# min numerics
+		$key .= &keygen( $password_policy->{'validate_password_mixed_case_count'}, 'A');		# min upper case
+		$key .= &keygen( $password_policy->{'validate_password_mixed_case_count'}, 'a');		# min lower case
+		$key .= &keygen( $password_policy->{'validate_password_special_char_count'}, '!');		# min special chars
+
+		if ($_[0] < $password_policy->{'validate_password_length'}) {					# enforce min key length
+			$key .= &keygen( (int($password_policy->{'validate_password_length'}) - length($key)) );
+		}
+		else {												# use provided key length
+			$key .= &keygen( ($_[0] - length($key)) );
+		}
+		return(join '', shuffle(split //, $key));							# shuffle the chars
+	}
+}
+
+#####################################################################################################################################################################################################
+# Usage: &keygen(size, type);											Return a char key, size chars long. Caps chars only if type = A
+#
+sub keygen {
+
+	&debug("keygen()");
 
 	my @chars = ();
 	my $key = '';
 
-	if ($_[1] eq 'A') { @chars = ('A'..'Z'); }								# select which chars are to be used
-	else { @chars = ('A'..'Z', 'a'..'z','0'..'9'); }
+	if ($_[1] eq 'A') { @chars = ('A'..'Z'); }								# upper case
+	elsif ($_[1] eq 'a') { @chars = ('a'..'z'); }								# lower case
+	elsif ($_[1] eq '0') { @chars = ('0'..'9'); }								# lower case
+	elsif ($_[1] eq '!') { @chars = ('!', '?', '+', '-'); }							# specials
+	else { @chars = ('A'..'Z', 'a'..'z','0'..'9'); }							# anything but specials
 
 	$key .= $chars[rand @chars] for 1..$_[0];								# generate key
 	return($key);
