@@ -1,4 +1,4 @@
-# Zatsums User Guide
+# Zatsuma User Guide
 
 ## Installation
 
