@@ -53,6 +53,8 @@ The Zatsuma checkout is a basic calculator and operates with FIAT amounts, you c
 
 As you enter numbers the BTC & ZEC values on the main display will change.
 
+You will also notice a 'rabbit', 'turtle' or 'snail' appear on each payment coin, this is to give an indication of how long each payment method takes. The time will vary based on the fiat value and number of confirmations specified in the 'shopd.conf' file.
+
 If you are in the middle of a calculation a '+', '-', '/', or 'x' symbol is displayed the crypto amounts will not update until you complete it by pressing the '=' key.
 
 The crypto prices are also updated once a minute to follow the current exchange rate, this happens automatically until an order is placed.
