@@ -49,6 +49,8 @@ Usernames are created by choosing a random adjective & animal name from the foll
 
 The Zatsuma checkout is a basic calculator and operates with FIAT amounts, so you can use that however you like to calculate the customers bill.
 
+![alt text](https://github.com/ChileBob/Zatsuma/blob/master/screenshots/checkout.png "Zatsuma Checkout")
+
 As you enter numbers the BTC & ZEC values on the main display will change.
 
 If you are in the middle of a calculation a '+', '-', '/', or 'x' symbol is displayed, pressing the '=' key gives you the amount and crypto equivalent amounts will update.
