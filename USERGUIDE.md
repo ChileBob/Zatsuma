@@ -17,7 +17,7 @@ As with all user accounts the password is randomly generated for several reasons
 
 The default policy requires passwords to have a minimum length, contain regular characters, capitals and some special characters.
 
-The admin user password is shown at the end of the install process.
+The admin user password is shown at the end of the install process. Its only shown once so make a note of it.
 
 
 ## Adding Users
@@ -28,16 +28,13 @@ To create an account, open a terminal window on the machine running the 'shopd' 
 
 /usr/local/zatsuma/shopd --adduser <username>
 
-Passwords are automatically generated, they're random as humans are really bad at choosing good passwords and must conform to the MySql password policy.
-
-
 You can also allow users to create their own accounts, open a terminal window and edit the file '~/.zatsuma/shopd.conf', set the following :-
 
 allow_guest = "1"
 
 This will cause Zatsuma to show an extra button on the login page which generates a random username & password. The password is hidden so click on the 'eye' to reveal it.
 
-Allowing guest accounts is disabled by default. Its only useful for demo/testing purposes, or possibly for a crowdfunding event where you don't care who is collect funds.
+Allowing guest accounts is disabled by default. Its only useful for demo/testing purposes, or possibly for a crowdfunding event where you don't care who is collecting funds.
 
 Usernames are created by choosing a random adjective & animal name from the following files :-
 
@@ -53,50 +50,50 @@ The Zatsuma checkout is a basic calculator and operates with FIAT amounts, you c
 
 As you enter numbers the BTC & ZEC values on the main display will change.
 
-You will also notice a 'rabbit', 'turtle' or 'snail' appear on each payment coin, this is to give an indication of how long each payment method takes. The time will vary based on the fiat value and number of confirmations specified in the 'shopd.conf' file.
+You will also notice a 'rabbit', 'turtle' or 'snail' appear on each payment coin, this is to give an indication of how long each payment method will take. The time varies based on the fiat value and number of confirmations specified in the 'shopd.conf' file.
 
-If you are in the middle of a calculation a '+', '-', '/', or 'x' symbol is displayed the crypto amounts will not update until you complete it by pressing the '=' key.
+If you are in the middle of a calculation a '+', '-', '/', or 'x' symbol is displayed and the crypto amounts will not update until you complete it by pressing the '=' key.
 
-The crypto prices are also updated once a minute to follow the current exchange rate, this happens automatically until an order is placed.
+Crypto prices are updated once a minute to track the current exchange rate, this happens automatically until an order is placed.
 
 To place an order, click the appropriate payment coin.
 
 
 ## Prices & Exchange Rates
 
-Exchange rates are updated once a minute from CoinLib, given the nature of crypto these prices are unlikely to match those of other exchanges or apps. 
+Exchange rates are from CoinLib, given the nature of crypto these prices are unlikely to match those on other exchanges or apps. 
 
-CoinLibs prices are an average from many exchanges, you can also monitor prices at https://coinlib.io or by using their app.
+CoinLibs prices are an average from many exchanges, you can also monitor their prices at https://coinlib.io or by using their app (see Google Play).
 
 
 ## Accepting Payments
 
-When you click a payment coin the order details and a QR code are displayed, the customer scans the QR code with their wallet to pay. The details include an order number which the customer may want to know.
+When you click a payment coin the order details and a QR code are displayed which the customer scans with their wallet. The details include an order number which the customer may want to know.
 
 Every 15 seconds the Zatsuma client checks the payment status, which moves through several stages :-
 
 ### Waiting For Payment
 
-Notification is the first stage of making a payment, it means the client wallet has sent their transaction to the network to be processed. It DOES NOT mean you have received funds, only that the process has been started.
+Notification is the first stage of receiving a payment, it means the client wallet has sent their transaction to the network to be processed. It DOES NOT mean you have received funds, only that the process has begun.
 
-Zatsuma will continue to show the payment details and the QR code until a payment notification has been received or the order is cancelled.
+Zatsuma will continue to show the payment details and the QR code until a notification has been received or the order is cancelled.
 
-Additionally, the exchange rate used for an will NO LONGER update while it is waiting for notification or confirmation. This is important as the customer accepted the rate when they placed their order.
+Additionally, the exchange rate used for the sale will NO LONGER update while waiting for notification or confirmation. This is important as the customer accepted the rate when they placed their order.
 
 Orders cannot be cancelled after a payment notification has been received.
 
 
 ### Waiting For Confirmation
 
-When a payment notification has been received Zatsuma updates the order to the next stage.
+When a payment notification has been received Zatsuma updates the order.
 
 Notification means the payment process has begun, confirmation means the payment has been mined and cannot be reversed.
 
 Different coins take a different times to confirm transactions. Zcash is approx 150 seconds, Bitcoin On-Chain can be 10 minutes, Bitcoin via Lightning Network confirms immediatly.
 
-The number of confirmations required for an order is defined in 'shopd.conf' and depends on the FIAT amount. The shop owner may choose to accept 0-Conf payments for small amounts and require several confirmations for larger sums.
+The number of confirmations required for an order is defined in 'shopd.conf' and depends on the FIAT amount. The shop owner may choose to accept 0-Conf payments for small amounts or require several confirmations for larger sums.
 
-Zatsuma will checks the order status every 15 seconds automatically.
+Zatsuma checks the order status every 15 seconds automatically until it has been fully confirmed.
 
 ### Payment Received
 
@@ -107,7 +104,7 @@ This shows the payment has completed, funds have arrived in the shop wallet and 
 
 Zatsuma can process many orders at once but can only display one at a time.
 
-A user can click 'My Orders' to get a list of all order they have taken. The list is colour coded to show status and selecting one will move it to the order processing screen and show its detail.
+A user can click 'My Orders' to get a list of all orders they have taken. The list is colour-coded to show status and selecting one will move it to the order processing screen to show its detail.
 
 
 ## Setting Confirmations & Limits
@@ -124,18 +121,18 @@ These settings exist for each supported coin as they have differing properties a
 
 Bitcoin On-Chain transactions can be altered using RBF (Replace-By-Fee) until they have been confirmed. This presents a risk the vendor may not be paid, however confirmations can take a very long time which is inconvenient to all.
 
-Zcash does not have RBF, however it has 'transaction expiry' where payments are eventually cancelled by the network.
+Zcash has 'transaction expiry' where payments are eventually cancelled by the network.
 
 Bitcoin Lightning transactions confirm instantly.
 
 
 ## Messages
 
-Zatsuma allows users to send short text messages, either between two users or as a broadcast to all.
+Zatsuma allows users to send short text messages, either to individual users or as a broadcast to all.
 
-Some shops may find that useful, perhaps to send details about an order (three beers, burgers & fries for table 7) or so users can chat within the system.
+Some shops may find that useful, perhaps to send details about an order (three beers, burgers & fries for table 7) or so users can chat within the system and away from snoopy apps.
 
-The zatsuma client checks for new messages every minute, makes a noise when new messages arrive and shows an inbox.
+The zatsuma client checks for new messages every minute, makes a noise when they arrive and shows an inbox.
 
 To send a message, select a username (or everyone), type the message & click send. Its all rather basic.
 
@@ -144,36 +141,36 @@ To send a message, select a username (or everyone), type the message & click sen
 
 Zatsuma can also receive Zcash 'encrypted memos', which can be up to 512 characters long and are supported by most modern wallets.
 
-The 'View Orders' page also shows a QR Code which is connected to the shop wallet. Customers can scan this, enter a ZEC amount and a message. These messages are sent to all Zatsuma users as a broadcast but cannot be replied to from within Zatsuma.
+The 'View Orders' page shows a QR Code which is connected to the shop wallet. Customers can scan this code, enter a ZEC amount and a message. These messages are broadcast to all Zatsuma users but cannot be replied to.
 
-This can be used in all sorts of ways, as a guestbook, customers feedback, or even for customers to send tips.
+This can be used in all sorts of ways, as a guestbook, customers feedback, or maybe for customers to send tips.
 
 
 ## Why Zcash ?
 
-Zcash is a private payment method, all transaction details are available on a public blockchain but are encrypted so that only those involved in a transaction can see the detail. This gives it the same properties as cash.
+Zcash is a private payment method, all transaction details are available on a public blockchain but encrypted so that only those involved in a transaction can see its detail. This gives it the same properties as cash.
 
-Transactions happen on-chain so it takes time for them to confirm, however the time between blocks is only 150 seconds so not too bad - this is also planned to speed up to 75 seconds in the near futur
+Transactions happen on-chain so it takes time for them to confirm, however the time between blocks is only 150 seconds so not too bad - this is also planned to speed up to 75 seconds in the near future.
 
 
 ## Why Bitcoin ?
 
-Bitcoin (on-chain) is the standard coin, anyone who has crypto has heard of it and probably has some. Its available on every crypto exchange can be bought through ATMs.
+Bitcoin (on-chain) is the standard, anyone who has crypto has heard of it and probably has some. Its available on every crypto exchange can even be bought through ATMs.
 
-In reality, the long time between blocks (10 minutes) means when the network is busy (full blocks) it can take a very long time for transactions to confirm - sometime many hours. This makes it difficult to use on-chain transactions in a retail environment.
+In reality, the long time between blocks (10 minutes) means when the network is busy it can take a very long time for transactions to confirm, sometimes many hours. Its also rather expensive for low cost items. This makes it difficult to use on-chain transactions in a retail environment.
 
 Bitcoin can also be sent via the Lightning Network, these transactions confirm instantly and costs are negligable.
 
-To accept payments over the Lightning Network the shop must also have a Bitcoin node, this makes it possible to accept on-chain payments so why not both.
+To accept payments over the Lightning Network zatsuma must also have a Bitcoin node, this makes it possible to accept on-chain payments so both methods are available.
 
 
 ## Transferring Funds
 
-Funds received by Zatsuma are stored in the shop node wallet, this should be considered a 'hot wallet' and treated as if it was a cash register. 
+Funds received by Zatsuma are stored in the shop node wallet, this should be considered a 'hot wallet' and treated as if it were a cash register. 
 
-Its important that funds are not allowed to accumulate and are sent to safe storage, perhaps a paper or hardware wallet. You may also wish to transfer them to an exchange where they can be sold for FIAT.
+Its important siginificant funds are not allowed to accumulate in the shop wallet. Its best to send them to safe storage, perhaps a paper or hardware wallet. You may also wish to send them to an exchange where they can be sold for FIAT.
 
-Zatsuma can only use commands that are 'whitelisted' and this excludes all commands that send funds, however those commands are available through the RPC or gRPC clients provided with the node.
+Zatsuma can only use commands that are 'whitelisted' and this excludes all that send funds, however those commands are available through the RPC or gRPC clients provided with the node.
 
 You can also use graphical wallets such as ZECwallet & bitcoin-qt.
 
