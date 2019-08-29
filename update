@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# confirm user has root access
+if [ $EUID -ne "0" ]; then
+	echo "You must have root access to update Zatsuma - try again with 'sudo ./update.sh'"
+	exit 1
+fi
+
+echo -e "Zatsuma Upgrade-O-Matic for Ubuntu Linux"
+
+echo "...updating zatsuma daemons"
+cp shopd/shopd shopd/*.txt /usr/local/bin/zatsuma
+cp shopd-zec/shopd-zec /usr/local/bin/zatsuma
+cp shopd-btc/shopd-btc /usr/local/bin/zatsuma
+cp shopd-btcln/shopd-btcln /usr/local/bin/zatsuma
+cp shopd-yec/shopd-yec /usr/local/bin/zatsuma
+chmod +x /usr/local/bin/zatsuma/*
+

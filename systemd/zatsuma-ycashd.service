@@ -1,0 +1,10 @@
+[Unit]
+Description=Zatsuma Ycash Node (ycashd)
+After=zatsuma-shopd-yec.service
+PartOf=zatsuma.service
+
+[Service]
+Type=forking
+User=USERNAME
+ExecStart=/usr/local/bin/ycashd -daemon
+ExecStop=/usr/local/bin/ycash-cli stop

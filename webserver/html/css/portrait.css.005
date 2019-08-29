@@ -1,0 +1,656 @@
+@import "css/normalize.css";
+
+html,body {
+	box-sizing: border-box;
+       	font-family: Tahoma, Arial, sans-serif;
+	font-size: 1rem;
+	color: white; 
+	background: black;
+}
+*, *:before, *:after { box-sizing: inherit; }
+
+html {
+	height: 100%;
+	width: 100%;
+}
+
+body {
+	min-height: 100%;
+	padding: 0;
+	background-color: #000000;
+	margin-left: 0px;
+	margin-right: 0px;
+}
+
+a {
+	color: red;
+	text-decoration: none;
+}
+
+li {
+	padding: 2px;
+}
+
+input[type="text"] {
+	font-size: 1rem;
+}
+input[type="password"] {
+	font-size: 1rem;
+}
+
+button {
+	color: #ffffff;
+	background-color: #2e7ad0;
+	height: 25px;
+	border: 0;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-weight: bold;
+	margin: 5px 0px 0px 0px;
+	cursor: pointer;
+	border-radius: 5px;
+}
+
+.bigbutton {
+	color: #ffffff;
+	background-color: #2e7ad0;
+	height: 40px;
+	border: 0;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-weight: bold;
+	font-size: 2rem;
+	margin: 5px 0px 0px 0px;
+	cursor: pointer;
+	border-radius: 10px;
+}
+
+select {
+	color: #ffffff;
+	background-color: #2e7ad0;
+	height: 25px;
+	border: 0;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	font-weight: bold;
+	margin: 5px 0px 0px 0px;
+	cursor: pointer;
+	border-radius: 5px;
+}
+
+/* *********************************************************************************************************************** */
+#fullscreen {
+	display: block;
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	height: 100%;
+	background-color: #000000;
+	text-align: center;
+}
+
+/* *********************************************************************************************************************** */
+#divTitleContainer {
+	display: block;
+	position: fixed;
+	top: 0px;
+	height: 32px;
+	width: 100%;
+	background-color: #000037;
+	z-index: 1;
+}
+#divTitleAlert {
+	position: absolute;
+	left: 0px;
+	border: 0px;
+	height: 32px;
+	width: 33px;
+	background-color: #000037;
+}
+#divTitleText {
+	position: absolute;
+	left: 33px;
+	right: 33px;
+	font-size: 1.75rem;
+	font-weight: bold;
+	background-color: #000037;
+	text-align: center;
+}
+#divTitleImg {
+	position: absolute;
+	right: 0px;
+	border: 0px;
+	text-align: left;
+	height: 32px;
+	background-color: #000000;
+}
+
+/* *********************************************************************************************************************** */
+#divMenu {
+	display: none;
+	position: fixed;
+	top: 35px;
+	right: 5px;
+	top: 30px;
+	color: #ffffff;
+	border: 10px;
+	text-align: left;
+	text-decoration: none;
+	font-size: 1.5rem;
+	font-weight: bold;
+	margin: 5px 0px 0px 0px;
+	cursor: pointer;
+	border-radius: 10px;
+	background-color: #000037;
+	color: #ffffff;
+}
+
+/* *********************************************************************************************************************** */
+
+#divSplash {
+	display: none;
+	position: fixed;
+	top: 35px;
+	width: 100%;
+	bottom: 15px;
+}
+
+/* *********************************************************************************************************************** */
+
+#divLogin {
+	display: none;
+	position: fixed;
+	top: 35px;
+	width: 100%;
+	bottom: 15px;
+	text-align: center;
+}
+#divLoginContainer {
+	position: relative;
+	top: 35px;
+	text-align: center;
+}
+
+#divLoginMessage {
+	position: fixed;
+	top: 200px;
+	width: 100%;
+}
+#canvasLoginContainer {
+	position: fixed;
+	bottom: 15px;
+	height: 180px;
+	width: 100%;
+}
+#canvasLogin {
+	height: 180px;
+	width: 200px;
+}
+
+
+/* *********************************************************************************************************************** */
+#divError {
+	display: none;
+}
+#divErrorContainer {
+	position: relative;
+	top: 35px;
+	text-align: center;
+}
+
+#divErrorMessage {
+	position: fixed;
+	top: 35px;
+	width: 100%;
+	text-align: center;
+}
+#canvasErrorContainer {
+	position: fixed;
+	bottom: 15px;
+	height: 240px;
+	width: 100%;
+}
+#canvasError {
+	height: 240px;
+	width: 350px;
+}
+
+
+/* *********************************************************************************************************************** */
+#divWallet {
+	display: none;
+	position: fixed;
+	top: 35px;
+	bottom: 15px;
+	width: 100%;
+	text-align: center;
+}
+#divWalletContainer {
+	width: 320px;
+	top: 0;
+	margin: 0 auto;
+}
+
+#divWalletQRcode {
+	display: inline-block;
+	width: 280px;
+	height: 280px;
+	background-color: #ffffff;
+	border-radius: 10px;
+	border: solid #ffffff 10px;
+}
+
+#divWalletAddress {
+	width: 100%;
+	height: 30px;
+	-webkit-overflow-scrolling: touch;
+	overflow-x: auto;
+	font-size: 0.8rem;
+}
+#divWalletCoin {
+	display: block;
+	position: fixed;
+	top: 370px;
+	bottom: 15px;
+	width: 100%;
+	text-align: center;
+	-webkit-overflow-scrolling: touch;
+	overflow-x: auto;
+}
+.WalletCoin {
+	position: relative;
+	display: inline-block;
+	width: 100px;
+	border-radius: 20px;
+}
+.WalletCoin table {
+	width: 100px;
+	border: 0px;
+	padding: 1px;
+	border-spacing: 2px 2px;
+}
+.WalletCoin td {
+	font-size: 0.75rem;
+	font-weight: normal;
+	white-space: nowrap;
+}
+
+/* *********************************************************************************************************************** */
+#divCheckout {
+	display: none;
+	position: fixed;
+	top: 35px;
+	width: 100%;
+	bottom: 15px;
+	margin: 0 auto;
+	text-align: center;
+}
+#divCheckoutDisplay {
+	top: 35px;
+	width: 320px;
+	border-spacing: 0px;
+	-webkit-user-select: none;
+	-moz-user-select: -moz-none;
+	-ms-user-select: none;
+	-user-select: none;
+	background-color: #202020;
+	border: solid 2px #202020;
+	border-radius: 10px;
+	border-color: #202020;
+	margin: 0 auto;
+}
+.CheckoutDisplayTable {
+	text-align: center;
+	width: 100%;
+}
+.CheckoutDisplayTable td {
+	border-radius: 5px;
+	border-color: #383838;
+	background-color: #383838;
+	font-weight: normal;
+	font-size: 0.75rem;
+}
+.CheckoutDisplayTable th {
+	border-radius: 5px;
+	border-color: #383838;
+	background-color: #383838;
+	font-weight: bold;
+	font-size: 1rem;
+}
+#divCheckoutKeyboard {
+	height: 260px;
+	text-align: center;
+	width: 100%;
+}
+.tableCheckoutKeyboard {
+	margin-top: 0px;
+	width: 320px;
+	height: 260px;
+	border-spacing: 4px;
+	-webkit-user-select: none;
+	-moz-user-select: -moz-none;
+	-ms-user-select: none;
+	-user-select: none;
+	text-align: center;
+}
+.tableCheckoutKeyboard td {
+	width: 33%;
+	font-size: 2rem;
+	font-weight: bold;
+	background-color: #2e78d0;
+	border-radius: 15px;
+}
+#divCheckoutCoin {
+	width: 100%;
+	top: 400px;
+	bottom: 15px;
+	position: fixed;
+	text-align: center;
+	-webkit-overflow-scrolling: touch;
+	overflow-x: auto;
+}
+.CheckoutCoin {
+	position: relative;
+	display: inline-block;
+	width: 100px;
+	height: 130px;
+	font-size: 0.75rem;
+	white-space: nowrap;
+}
+
+
+/* *********************************************************************************************************************** */
+#divAbout {
+	display: none;
+	position: fixed;
+	top: 35px;
+	width: 100%;
+	bottom: 15px;
+	text-align: center;
+	-webkit-overflow-scrolling: touch;
+	overflow-x: auto;
+}
+#divAboutContainer {
+	display: inline-block;
+	text-align: left;
+}
+
+/* *********************************************************************************************************************** */
+#divUsers {
+	display: none;
+	top: 35px;
+	width: 320px;
+}
+#divUsersContainer {
+	display: block;
+	position: fixed;
+	top: 35px;
+	bottom: 15px;
+	width: 100%;
+	height: 100%;
+	-webkit-overflow-scrolling: touch;
+	overflow-x: auto;
+	text-align: center;
+}
+#divUsersList {
+	display: inline-block;
+	width: 320px;
+}
+#divUsersList table {
+	width: 320px;
+	border-collapse: inherit;
+	border-spacing: 0px 2px;
+}
+#divUsersList th {
+	font-weight: bold;
+	text-align: left;
+}
+#divUsersList td {
+	font-weight: normal;
+	text-align: left;
+}
+#divUsersList img {
+	vertical-align: middle;
+}
+
+/* *********************************************************************************************************************** */
+#divOrders {
+	display: none;
+	top: 35px;
+	width: 320px;
+}
+#divOrdersContainer {
+	display: inline-block;
+	position: fixed;
+	top: 35px;
+	bottom: 15px;
+	width: 100%;
+	height: 100%;
+	-webkit-overflow-scrolling: touch;
+	overflow-x: auto;
+	text-align: center;
+}
+#divOrdersList {
+	display: inline-block;
+	width: 100%;
+}
+#divOrdersList table {
+	width: 320px;
+	border-collapse: inherit;
+	border-spacing: 0px 2px;
+}
+#divOrdersList th {
+	font-weight: bold;
+	text-align: left;
+}
+#divOrdersList td {
+	font-weight: normal;
+	text-align: left;
+}
+#divOrdersList img {
+	vertical-align: middle;
+}
+
+
+/* *********************************************************************************************************************** */
+#divOrder {
+	display: none;
+	position: fixed;
+	top: 35px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	-webkit-overflow-scrolling: touch;
+	overflow-x: auto;
+}
+#divOrderContainer {
+	display: inline-block;
+	width: 320px;
+	height: 100%;
+	-webkit-overflow-scrolling: touch;
+	overflow-x: auto;
+	text-align: center;
+}
+#divOrderQRcode {
+	display: inline-block;
+	width: 280px;
+	height: 280px;
+	background-color: #ffffff;
+	border-radius: 10px;
+	border: solid #ffffff 10px;
+}
+#divOrderAddress {
+	position: fixed;
+	top: 320px;
+	height: 30px;
+	width: 320px;
+	margin: 0 auto;
+	-webkit-overflow-scrolling: touch;
+	overflow-x: auto;
+	font-size: 0.8rem;
+	white-space: nowrap
+}
+#divOrderStatus {
+	position: fixed;
+	top: 370px;
+	bottom: 15px;
+	width: 320px;
+}
+#divOrderStatus table {
+	border: 5px;
+	padding: 5px;
+	border-spacing: 10px 2px;
+}
+
+/* *********************************************************************************************************************** */
+#divStatus {
+	display: none;
+	position: fixed;
+	top: 35px;
+	bottom: 0px;
+	width: 100%;
+	text-align: center;
+	margin: 0 auto;
+}
+#divStatusContainer {
+	display: inline-block;
+	width: 320px;
+	height: 100%;
+	text-align: left;
+}
+#divStatusContainer table {
+	width: 100%;
+};
+
+
+/* *********************************************************************************************************************** */
+#divMessages {
+	display: none;
+	top: 35px;
+	width: 100%;
+}
+#divMessagesContainer {
+	position: fixed;
+	top: 35px;
+	bottom: 15px;
+	height: 100%;
+	width: 100%;
+	text-align: center;
+}
+#divMessagesCompose {
+	display: inline-block;
+	width: 320px;
+	height: 100px;
+}
+#divMessagesCompose textarea {
+	width: 320px;
+}
+#divMessagesComposeSelect {
+	display: inline-block;
+}
+#divMessagesList {
+	position: fixed;
+	top: 200px;
+	bottom: 15px;
+	margin-left: 10px;
+	margin-right: 10px;
+	-webkit-overflow-scrolling: touch;
+	overflow-y: auto;
+}
+#divMessagesList table {
+	border-collapse: collapse;
+}
+#divMessagesList th {
+	font-weight: normal;
+	text-align: right;
+}
+#divMessagesList td {
+	font-weight: normal;
+	text-align: left;
+}
+#divMessagesList hr {
+	color: #000067;
+}
+
+/* *********************************************************************************************************************** */
+#divMessage {
+	display: none;
+}
+
+/* *********************************************************************************************************************** */
+#divView {
+	display: none;
+	position: fixed;
+	top: 35px;
+	bottom: 0px;
+	width: 100%;
+}
+#divViewContainer {
+	display: inline-block;
+	position: fixed;
+	width: 320px;
+	top: 35px;
+	bottom: 15px;
+	margin: 0 auto;
+	text-align: center;
+}
+
+#divViewList {
+	position: fixed;
+	top: 35px;
+	bottom: 360px;
+	left: 0;
+	width: 100%;
+	background-color: #000000;
+	-webkit-overflow-scrolling: touch;
+	overflow-x: auto;
+}
+#divViewList table {
+	width: 320px;
+	border-collapse: inherit;
+	border-spacing: 0px 2px;
+}
+#divViewList th {
+	font-weight: bold;
+	text-align: left;
+}
+#divViewList td {
+	font-weight: normal;
+	text-align: left;
+}
+#divViewList img {
+	vertical-align: middle;
+}
+#divViewGuestbook {
+	display: block;
+	position: absolute;
+	bottom: 15px;
+	height: 350px;
+	width: 100%;
+	background-color: #00027;
+	text-align: center;
+}
+#divViewQRcode {
+	display: inline-block;
+	width: 280px;
+	height: 280px;
+	background-color: #ffffff;
+	border-radius: 10px;
+	border: solid #ffffff 10px;
+}
+
+/* *********************************************************************************************************************** */
+#divFooter {
+	position: fixed;
+	bottom: 0px;
+	width: 100%;
+	height: 15px;
+	text-align: center;
+	font-size: 0.75rem;
+	background-color: #000037;
+}
+
+

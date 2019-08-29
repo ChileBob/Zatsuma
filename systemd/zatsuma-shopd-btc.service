@@ -1,0 +1,12 @@
+[Unit]
+Description=Zatsuma Shop Daemon (Bitcoin)
+After=zatsuma-shopd.service
+PartOf=zatsuma.service
+StartLimitIntervalSec=0
+Wants=zatsuma-bitcoind.service
+
+[Service]
+Type=simple
+User=USERNAME
+ExecStart=/usr/local/bin/zatsuma/shopd-btc
+

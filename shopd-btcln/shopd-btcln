@@ -13,11 +13,13 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITIES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
 # OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# Version 0.0.6-rc3
+# Version 0.0.7-dev
 
 use strict;
 
 my $installdir = "$ENV{'HOME'}/.zatsuma";	# default installation directory
+open (my $logfile, '>>', "$installdir/shopd-btcln.log") or die "Cant open $installdir/shopd-btcln.log";
+
 my $debug      = 0;				# debug level (0 = none, 1 = message only, 2 = message + var)
 
 #####################################################################################################################################################################################################
@@ -69,7 +71,7 @@ $json_socket = new IO::Socket::INET (											# open listening network socket
 $| = 1; 														# auto-flush on network socket
 die "FATAL: Cannot create socket\n" unless $json_socket;								# die if we cant open a socket
 
-print "Starting daemon, listening on 127.0.0.1, port $config{'port'}, $config{'sockets'} sockets available\n";		# helpful startup message
+&debug ("Starting daemon, listening on 127.0.0.1, port $config{'port'}, $config{'sockets'} sockets available");		# helpful startup message
 
 while(1) { 														
  
@@ -82,12 +84,9 @@ while(1) {
  
 	$client_socket = $json_socket->accept();									# accept connection
 
-	print "\033[2J";												# clear screen
-	print "\033[0;0H";												# move to top of screen
-	
  	$client_addr = $client_socket->peerhost();									# get connecting IP address
 	if ( $config{'shopip'} != $client_socket->peerhost() ) {					
-		&debug("WARNING! Suspect incoming connection $client_socket->peerhost(), expected from $config{'shopip'}");
+		&debug("WARNING: Suspect incoming connection $client_socket->peerhost(), expected from $config{'shopip'}");
 	}
 
 	$client_socket->recv($json_rx, $client_maxbytes);								# read request from client, limited to 8192 bytes & waits for next connection
@@ -264,11 +263,11 @@ sub json_send {
 sub debug {
 
 	if ($debug > 0) {											# print the message (debug = 1)
-		print "DEBUG : $_[0]\n";
+			printf $logfile "$_[0]\n";
 	}
 
 	if ( ($_[1]) && ($debug > 1)) {										# print the var (debug = 2)
-		print Dumper $_[1];
+		printf $logfile Dumper($_[1]);
 	}
 }
 

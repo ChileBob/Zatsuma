@@ -1,0 +1,11 @@
+[Unit]
+Description=Zatsuma Zcash Node (zcashd)
+After=zatsuma-shopd-zec.service
+PartOf=zatsuma.service
+
+[Service]
+Type=forking
+User=USERNAME
+ExecStart=/usr/bin/zcashd -daemon
+ExecStop=/usr/bin/zcash-cli stop
+
