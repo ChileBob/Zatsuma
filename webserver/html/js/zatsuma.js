@@ -8,7 +8,7 @@
 
 // CHANGE THIS TO MATCH YOUR INSTALLATION
 
-var shopAPI = 'http://127.0.0.1/cgi-bin/zatsuma.cgi';						// shop proxy - delete this line after installation
+var shopAPI = 'http://zatsuma.localhost/cgi-bin/zatsuma.cgi';					// shop proxy - delete this line after installation
 //var shopAPI = 'https://REPLACE-WITH-YOUR-DOMAIN.duckdns.org/cgi-bin/zatsuma.cgi';		// shop proxy - edit to match your installation
 
 // #######################################################################################################################################################
@@ -29,6 +29,15 @@ var cacheUSER   = new Object;									// user config
 var cacheEXCH   = new Object;									// exchange rates
 var cacheNODE   = new Object;									// node status
 var cacheORDER  = new Object;									// active order
+
+var cacheCOIN   = {										// cache of current coin image
+	ZECT:  'disabled',
+	ZECZ:  'disabled',
+	YECS:  'disabled',
+	YECY:  'disabled',
+	BTC:   'disabled',
+	BTCLN: 'disabled'
+};
 
 var cacheNOTIFY = {										// cache of last notification times
 	orders: 0,
@@ -162,7 +171,7 @@ function B_wallet(button) {											// Wallet buttons
 
 	cacheDISPLAY.wallet = button;										// cache selected wallet
 
-	var coinList = new Array('ZECT', 'ZECZ', 'BTC', 'BTCLN', 'CASH');					// supported coins
+	var coinList = new Array('ZECT', 'ZECZ', 'BTC', 'BTCLN', 'CASH', 'YECS', 'YECY');			// supported coins
 
 	document.getElementById('divWalletQRcode').innerHTML = '';						// clear QR code
 	document.getElementById('divWalletAddress').innerHTML = '';
@@ -186,6 +195,14 @@ function B_wallet(button) {											// Wallet buttons
 	if ( (button == 'ZECZ') && (typeof cacheNODE.zec.config == 'object') ) {
 		jQuery('#divWalletQRcode').qrcode ( encodeURI('zcash:' + cacheNODE.zec.config.zaddr) );
 		document.getElementById('divWalletAddress').innerHTML = cacheNODE.zec.config.zaddr;
+	}
+	if ( (button == 'YECS') && (typeof cacheNODE.yec.config == 'object') ) {
+		jQuery('#divWalletQRcode').qrcode ( encodeURI('ycash:' + cacheNODE.yec.config.saddr) );
+		document.getElementById('divWalletAddress').innerHTML = cacheNODE.yec.config.saddr;
+	}
+	if ( (button == 'YECY') && (typeof cacheNODE.yec.config == 'object') ) {
+		jQuery('#divWalletQRcode').qrcode ( encodeURI('ycash:' + cacheNODE.yec.config.yaddr) );
+		document.getElementById('divWalletAddress').innerHTML = cacheNODE.yec.config.yaddr;
 	}
 	if ( (button == 'BTC') && (typeof cacheNODE.btc.config == 'object') ) {
 		jQuery('#divWalletQRcode').qrcode ( encodeURI('bitcoin:' + cacheNODE.btc.config.addr) );
@@ -441,6 +458,7 @@ function B_calc(digit, downup) {										// calculator button handler
 		document.getElementById('E_checkoutFIATamount').innerHTML = cacheCALC.inputstring;		// update the calculator display
 		if (cacheCALC.inputstring == 'Error') {									// clear cypto amounts if there's an error
 			document.getElementById('E_checkoutZECamount').innerHTML = '0.00000000</br>ZEC';
+			document.getElementById('E_checkoutYECamount').innerHTML = '0.00000000</br>YEC';
 			document.getElementById('E_checkoutBTCamount').innerHTML = '0.00000000</br>BTC';
 		}
 	}
@@ -507,20 +525,23 @@ function calculate_exch() {
 
 	if (cacheEXCH.status == 1) {								// check we have exchange rate data
 		if (isNaN(cacheCALC.inputstring) == false) {			
-			document.getElementById('E_checkoutZECamount').innerHTML = Number(cacheCALC.inputstring / cacheEXCH.ZEC).toFixed(8) + '</br>ZEC';
-			document.getElementById('E_checkoutBTCamount').innerHTML = Number(cacheCALC.inputstring / cacheEXCH.BTC).toFixed(8) + '</br>BTC';
+			document.getElementById('E_checkoutZECamount').innerHTML = Number(cacheCALC.inputstring / cacheEXCH.ZEC).toFixed(8) + ' ZEC';
+			document.getElementById('E_checkoutYECamount').innerHTML = Number(cacheCALC.inputstring / cacheEXCH.YEC).toFixed(8) + ' YEC';
+			document.getElementById('E_checkoutBTCamount').innerHTML = Number(cacheCALC.inputstring / cacheEXCH.BTC).toFixed(8) + ' BTC';
 
 			// TODO: Check min/max order value for each payment method & update checkout coin images to show status
 		}
 	}
 	else {											// we dont, so tell the user
 		document.getElementById('E_checkoutZECamount').innerHTML = 'No Data';
+		document.getElementById('E_checkoutYECamount').innerHTML = 'No Data';
 		document.getElementById('E_checkoutBTCamount').innerHTML = 'No Data';
 
 		// TODO: Change checkout coin images to 'disabled'
 	}
 	if (cacheCALC.inputstring == 'Error') {							// calculator showing error
 		document.getElementById('E_checkoutZECamount').innerHTML = '0.00000000</br>ZEC';
+		document.getElementById('E_checkoutYECamount').innerHTML = '0.00000000</br>YEC';
 		document.getElementById('E_checkoutBTCamount').innerHTML = '0.00000000</br>BTC';
 
 		// TODO: Change checkout coin images to 'disabled'
@@ -547,12 +568,15 @@ function B_checkout(coin) {									// Checkout coin button
 		else if (coin == 'BTC' || coin == 'BTCLN') {					// new BTC order
 			coinamount = (cacheCALC.inputstring / cacheEXCH.BTC).toFixed(8);
 		}
+		else if (coin == 'YECS' || coin == 'YECY') {					// new YEC order
+			coinamount = (cacheCALC.inputstring / cacheEXCH.YEC).toFixed(8);
+		}
 		else if (coin == 'CASH') {							// new cash order
 			coinamount = cacheCALC.inputstring;
 		}
 
 		if (isNaN(coinamount) ) {
-			document.getElementById('E_checkoutFIATamount').innerHTML = 'No Exchange Rates';
+			document.getElementById('E_checkoutFIATamount').innerHTML = 'No Exch Rates';
 			var audio = new Audio('audio/cancel.mp3');				// play sound
 			audio.play();
 		}
@@ -624,28 +648,61 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 			D_showdiv('Error');
 		}
 		else {
-			var coinLIST = new Array('ZECT', 'ZECZ', 'BTC', 'BTCLN');				// hide all coin icons
-
-			for ( var i = 0; i < coinLIST.length; i++) {
-				document.getElementById('divWallet' + coinLIST[i]).style.display = 'none';
-				document.getElementById('divCheckout' + coinLIST[i]).style.display = 'none';
-			}
+			// TODO: The coins flicker, should only change status when necessary
 			// TODO: Should show error page if ZEC is offline, its required !
+			//
 			if ( (typeof cacheNODE.zec != 'undefined') && (typeof cacheNODE.zec.config == 'object') && (cacheCONFIG.zect_allow == 1) ) {		// Transaparent ZEC
 				document.getElementById('divWalletZECT').style.display = 'inline-block';
 				document.getElementById('divCheckoutZECT').style.display = 'inline-block';
 			}
+			else {
+				document.getElementById('divWalletZECT').style.display = 'none';
+				document.getElementById('divCheckoutZECT').style.display = 'none';
+			}
+
 			if ( (typeof cacheNODE.zec != 'undefined') && (typeof cacheNODE.zec.config == 'object') && (cacheCONFIG.zecz_allow == 1) ) {		// Shielded ZEC
 				document.getElementById('divWalletZECZ').style.display = 'inline-block';
 				document.getElementById('divCheckoutZECZ').style.display = 'inline-block';
 			}
+			else {
+				document.getElementById('divWalletZECZ').style.display = 'none';
+				document.getElementById('divCheckoutZECZ').style.display = 'none';
+			}
+
+			if ( (typeof cacheNODE.yec != 'undefined') && (typeof cacheNODE.yec.config == 'object') && (cacheCONFIG.yecs_allow == 1) ) {		// Transaparent YEC
+				document.getElementById('divWalletYECS').style.display = 'inline-block';
+				document.getElementById('divCheckoutYECS').style.display = 'inline-block';
+			}
+			else {
+				document.getElementById('divWalletYECS').style.display = 'none';
+				document.getElementById('divCheckoutYECS').style.display = 'none';
+			}
+
+			if ( (typeof cacheNODE.yec != 'undefined') && (typeof cacheNODE.yec.config == 'object') && (cacheCONFIG.yecy_allow == 1) ) {		// Shielded YEC
+				document.getElementById('divWalletYECY').style.display = 'inline-block';
+				document.getElementById('divCheckoutYECY').style.display = 'inline-block';
+			}
+			else {
+				document.getElementById('divWalletYECY').style.display = 'none';
+				document.getElementById('divCheckoutYECY').style.display = 'none';
+			}
+
 			if ( (typeof cacheNODE.btc != 'undefined') && (typeof cacheNODE.btc.config == 'object') && (cacheCONFIG.btc_allow == 1) ) {		// Bitcoin OnChain
 				document.getElementById('divWalletBTC').style.display = 'inline-block';
 				document.getElementById('divCheckoutBTC').style.display = 'inline-block';
 			}
+			else {
+				document.getElementById('divWalletBTC').style.display = 'none';
+				document.getElementById('divCheckoutBTC').style.display = 'none';
+			}
+
 			if ( (typeof cacheNODE.btcln != 'undefined') && (typeof cacheNODE.btcln.config == 'object') && (cacheCONFIG.btcln_allow ==1) ) {	// Bitcoin Lightning
 				document.getElementById('divWalletBTCLN').style.display = 'inline-block';
 				document.getElementById('divCheckoutBTCLN').style.display = 'inline-block';
+			}
+			else {
+				document.getElementById('divWalletBTCLN').style.display = 'none';
+				document.getElementById('divCheckoutBTCLN').style.display = 'none';
 			}
 
 
@@ -664,7 +721,7 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 				document.getElementById('E_checkoutFIAT_coin').innerHTML = cacheCONFIG.fiat;		// set checkout fiat symbol on coin
 
 				document.getElementById('divViewQRcode').innerHTML = '';				// clear QR code
-				if (cacheCONFIG.zecz_allow == 1) {							// set memo zaddr if its allowed
+				if ( (cacheCONFIG.zecz_allow == 1) && (typeof cacheNODE.zec.config.zaddr != 'undefined') ) {	// set memo zaddr if allowed & node is online
 					jQuery('#divViewQRcode').qrcode ( encodeURI('zcash:' + cacheNODE.zec.config.zaddr) );
 					document.getElementById('divViewGuestbook').style.display = 'block';
 				}
@@ -1008,6 +1065,8 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 						var coin;										// display order coin
 						if (order[0] == 'ZECZ')       { coin = '<img src=\"images/zecz-15x15.png\">'; }
 						else if (order[0] == 'ZECT')  { coin = '<img src=\"images/zect-15x15.png\">';  }
+						else if (order[0] == 'YECS')  { coin = '<img src=\"images/yecs-15x15.png\">';  }
+						else if (order[0] == 'YECY')  { coin = '<img src=\"images/yecy-15x15.png\">';  }
 						else if (order[0] == 'BTC')   { coin = '<img src=\"images/btc-15x15.png\">';   }
 						else if (order[0] == 'BTCLN') { coin = '<img src=\"images/btcln-15x15.png\">'; }
 						else if (order[0] == 'CASH')  { coin = '<img src=\"images/cash-15x15.png\">';  }
@@ -1025,10 +1084,11 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 				document.getElementById('divOrdersList').innerHTML = html;		
 			}
 			
-			// *************************************************************************************************************************************
-			if (typeof data.order_list != 'undefined') {						// list of all active orders
+				// *************************************************************************************************************************************
+			if ( (typeof data.order_list != 'undefined') && (typeof data.order_list.order != 'undefined') ) {								// list of all active orders
 				var html = '<table align=\"center\">';
 				var updated = 0;
+
 				for ( var i = 0; i <data.order_list.order.length; i++) {					// generate a table showing all orders
 					var order = data.order_list.order[i];
 	
@@ -1039,6 +1099,8 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 					var coin;										// display order coin
 					if (order[0] == 'ZECZ')       { coin = '<img src=\"images/zecz-15x15.png\">';  }
 					else if (order[0] == 'ZECT')  { coin = '<img src=\"images/zect-15x15.png\">';  }
+					else if (order[0] == 'YECS')  { coin = '<img src=\"images/yecs-15x15.png\">';  }
+					else if (order[0] == 'YECY')  { coin = '<img src=\"images/yecy-15x15.png\">';  }
 					else if (order[0] == 'BTC')   { coin = '<img src=\"images/btc-15x15.png\">';   }
 					else if (order[0] == 'BTCLN') { coin = '<img src=\"images/btcln-15x15.png\">'; }
 					else if (order[0] == 'CASH')  { coin = '<img src=\"images/cash-15x15.png\">';  }
@@ -1059,7 +1121,7 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 			// *************************************************************************************************************************************
 			if (typeof data.wallet_balance != 'undefined') {					// wallet balances
 	
-				var coinLIST = new Array('ZECT', 'ZECZ', 'BTC', 'BTCLN');				// clear balances
+				var coinLIST = new Array('ZECT', 'ZECZ', 'BTC', 'BTCLN', 'YECS', 'YECY');	// clear balances
 				for ( var i = 0; i < coinLIST.length; i++) {
 					document.getElementById('E_wallet' + coinLIST[i] + 'amount').innerHTML = '0.00000000 ' + truncate(coinLIST[i], 3);	
 					document.getElementById('E_wallet' + coinLIST[i] + 'fiat').innerHTML = '0.00 ' + cacheCONFIG.fiat;
@@ -1125,6 +1187,28 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 					html += '<tr><th>Min Order Value</th><td align="right">' + Number(cacheCONFIG.zec_minvalue).toFixed(2) + ' ' + cacheCONFIG.fiat + '</td></tr>\n';
 					html += '</table>\n';
 					document.getElementById('divStatusZEC').innerHTML = html;			// update the div
+				}
+			
+				if ( (typeof data.node.yec != 'undefined') && (typeof data.node.yec.status == 'object' )) {
+					var html;
+					cacheNODE.yec.status = data.node.yec.status;
+	
+					html = '<table>\n';
+					html += '<tr><th>Version</th><td align="right">' + data.node.yec.status.version + '</td></tr>\n';
+					html += '<tr><th>Blocks</th><td align="right">' + data.node.yec.status.blocks + '</td></tr>\n';
+					html += '<tr><th>Connections</th><td align="right">' + data.node.yec.status.connections + '</td></tr>\n';
+
+					if (cacheCONFIG.yecs_allow == 1) { html += '<tr><th>S-Addr Payments</th><td align="right">Enabled</td></tr>\n'; }
+					else { html += '<tr><th>S-Addr Payments</th><td align="right">Disabled</td></tr>\n'; }
+
+					if (cacheCONFIG.yecy_allow == 1) { html += '<tr><th>Y-Addr Payments</th><td align="right">Enabled</td></tr>\n'; }
+					else { html += '<tr><th>Y-Addr Payments</th><td align="right">Disabled</td></tr>\n'; }
+
+					html += '<tr><th>Max Zero-Conf Value</th><td align="right">' + Number(cacheCONFIG.yec_zeroconf).toFixed(2) + ' ' + cacheCONFIG.fiat + '</td></tr>\n';
+					html += '<tr><th>Max Order Value</th><td align="right">Unlimited</td></tr>\n';
+					html += '<tr><th>Min Order Value</th><td align="right">' + Number(cacheCONFIG.yec_minvalue).toFixed(2) + ' ' + cacheCONFIG.fiat + '</td></tr>\n';
+					html += '</table>\n';
+					document.getElementById('divStatusYEC').innerHTML = html;			// update the div
 				}
 			
 				if ( (typeof data.node.btc != 'undefined') && (typeof data.node.btc.status == 'object') ){
@@ -1289,7 +1373,7 @@ function D_showdiv(divname) {											// Show selected div
 // ******************************************************************************************************************************************************************
 function D_checkout_coin() {										// Update coin images on checkout to enabled/disabled based on config and order value
 
-	var coinList = new Array('ZECT', 'ZECZ', 'BTC', 'BTCLN');						// supported coins
+	var coinList = new Array('ZECT', 'ZECZ', 'BTC', 'BTCLN', 'YECS', 'YECY');				// supported coins
 	var conftime;
 
 	for( var coin = 0; coin < coinList.length; coin++) {			
@@ -1299,69 +1383,175 @@ function D_checkout_coin() {										// Update coin images on checkout to enabl
 			if ( coinList[coin] == 'ZECT' )	{							// Zcash Transparent
 				if (cacheCALC.inputstring >= cacheCONFIG.zec_minvalue) {				// enable
 					if (cacheCALC.inputstring < Number(cacheCONFIG.zec_zeroconf)) {			// 0-conf allowed (rabbit)
-						document.getElementById('E_Checkout_Coin_ZECT').innerHTML = '<img src=\"images/zect-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECT\');\">';
+						if (cacheCOIN.ZECT != 'rabbit') {
+							document.getElementById('E_Checkout_Coin_ZECT').innerHTML = '<img src=\"images/zect-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECT\');\">';
+							cacheCOIN.ZECT = 'rabbit';
+						}
 					}
 					else {										// confirmation required
 						conftime = (cacheCONFIG.zec_minconf * cacheCONFIG.zec_blocktime);
 						if (conftime < 180) {							// less than three minutes (turtle)
-							document.getElementById('E_Checkout_Coin_ZECT').innerHTML = '<img src=\"images/zect-80x80-turtle.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECT\');\">';
+							if (cacheCOIN.ZECT != 'turtle') {
+								document.getElementById('E_Checkout_Coin_ZECT').innerHTML = '<img src=\"images/zect-80x80-turtle.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECT\');\">';
+								cacheCOIN.ZECT = 'turtle';
+							}
 						}
 						else {									// more than three minutes (snail)
-							document.getElementById('E_Checkout_Coin_ZECT').innerHTML = '<img src=\"images/zect-80x80-snail.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECT\');\">';
+							if (cacheCOIN.ZECT != 'snail') {
+								document.getElementById('E_Checkout_Coin_ZECT').innerHTML = '<img src=\"images/zect-80x80-snail.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECT\');\">';
+								cacheCOIN.ZECT = 'snail';
+							}
 						}
 					}
 				}
 				else {											// disable
-					document.getElementById('E_Checkout_Coin_ZECT').innerHTML = '<img src=\"images/zect-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECT\');\">';
+					if (cacheCOIN.ZECT != 'disabled') {
+						document.getElementById('E_Checkout_Coin_ZECT').innerHTML = '<img src=\"images/zect-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECT\');\">';
+						cacheCOIN.ZECT = 'disabled';
+					}
 				}
 			}
 
 			if ( coinList[coin] == 'ZECZ' )	{							// Zcash Shielded
 				if (cacheCALC.inputstring >= cacheCONFIG.zec_minvalue) {				// enable
 					if (cacheCALC.inputstring < Number(cacheCONFIG.zec_zeroconf)) {			// 0-conf allowed (rabbit)
-						document.getElementById('E_Checkout_Coin_ZECZ').innerHTML = '<img src=\"images/zecz-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECZ\');\">';
+						if (cacheCOIN.ZECZ != 'rabbit') {
+							document.getElementById('E_Checkout_Coin_ZECZ').innerHTML = '<img src=\"images/zecz-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECZ\');\">';
+							cacheCOIN.ZECZ = 'rabbit';
+						}
 					}
 					else {										// confirmation required
 						conftime = (cacheCONFIG.zec_minconf * cacheCONFIG.zec_blocktime);
 						if (conftime < 180) {							// less than three minutes (turtle)
-							document.getElementById('E_Checkout_Coin_ZECZ').innerHTML = '<img src=\"images/zecz-80x80-turtle.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECZ\');\">';
+							if (cacheCOIN.ZECZ != 'turtle') {
+								document.getElementById('E_Checkout_Coin_ZECZ').innerHTML = '<img src=\"images/zecz-80x80-turtle.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECZ\');\">';
+								cacheCOIN.ZECZ = 'turtle';
+							}	
 						}
 						else {									// more than three minutes (snail)
-							document.getElementById('E_Checkout_Coin_ZECZ').innerHTML = '<img src=\"images/zecz-80x80-snail.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECZ\');\">';
+							if (cacheCOIN.ZECZ != 'snail') {
+								document.getElementById('E_Checkout_Coin_ZECZ').innerHTML = '<img src=\"images/zecz-80x80-snail.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECZ\');\">';
+								cacheCOIN.ZECZ = 'snail';
+							}
 						}
 					}
 				}
 				else {											// disable
-					document.getElementById('E_Checkout_Coin_ZECZ').innerHTML = '<img src=\"images/zecz-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECZ\');\">';
+					if (cacheCOIN.ZECZ != 'disabled') {
+						document.getElementById('E_Checkout_Coin_ZECZ').innerHTML = '<img src=\"images/zecz-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'ZECZ\');\">';
+						cacheCOIN.ZECZ = 'disabled';
+					}
+				}
+			}
+
+			if ( coinList[coin] == 'YECS' )	{							// Ycash Transparent
+				if (cacheCALC.inputstring >= cacheCONFIG.yec_minvalue) {				// enable
+					if (cacheCALC.inputstring < Number(cacheCONFIG.yec_zeroconf)) {			// 0-conf allowed (rabbit)
+						if (cacheCOIN.YECS != 'rabbit') {
+							document.getElementById('E_Checkout_Coin_YECS').innerHTML = '<img src=\"images/yecs-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'YECS\');\">';
+							cacheCOIN.YECS = 'rabbit'
+						}
+					}
+					else {										// confirmation required
+						conftime = (cacheCONFIG.yec_minconf * cacheCONFIG.yec_blocktime);
+						if (conftime < 180) {							// less than three minutes (turtle)
+							if (cacheCOIN.YECS != 'turtle') {
+								document.getElementById('E_Checkout_Coin_YECS').innerHTML = '<img src=\"images/yecs-80x80-turtle.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'YECS\');\">';
+								cacheCOIN.YECS = 'turtle';
+							}
+						}
+						else {									// more than three minutes (snail)
+							if (cacheCOIN.YECS != 'snail') {
+								document.getElementById('E_Checkout_Coin_YECS').innerHTML = '<img src=\"images/yecs-80x80-snail.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'YECS\');\">';
+								cacheCOIN.YECS = 'snail';
+							}
+						}
+					}
+				}
+				else {											// disable
+					if (cacheCOIN.YECS != 'disabled') {
+						document.getElementById('E_Checkout_Coin_YECS').innerHTML = '<img src=\"images/yecs-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'YECS\');\">';
+						cacheCOIN.YECS = 'disabled';
+					}
+				}
+			}
+
+			if ( coinList[coin] == 'YECY' )	{							// Ycash Shielded
+				if (cacheCALC.inputstring >= cacheCONFIG.yec_minvalue) {				// enable
+					if (cacheCALC.inputstring < Number(cacheCONFIG.yec_zeroconf)) {			// 0-conf allowed (rabbit)
+						if (cacheCOIN.YECY != 'rabbit') {
+							document.getElementById('E_Checkout_Coin_YECY').innerHTML = '<img src=\"images/yecy-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'YECY\');\">';
+							cacheCOIN.YECY = 'rabbit';
+						}
+					}
+					else {										// confirmation required
+						conftime = (cacheCONFIG.yec_minconf * cacheCONFIG.yec_blocktime);
+						if (conftime < 180) {							// less than three minutes (turtle)
+							if (cacheCOIN.YECY != 'turtle') {
+								document.getElementById('E_Checkout_Coin_YECY').innerHTML = '<img src=\"images/yecy-80x80-turtle.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'YECY\');\">';
+								cacheCOIN.YECY = 'turtle';
+							}
+						}
+						else {									// more than three minutes (snail)
+							if (cacheCOIN.YECY != 'snail') {
+								document.getElementById('E_Checkout_Coin_YECY').innerHTML = '<img src=\"images/yecy-80x80-snail.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'YECY\');\">';
+								cacheCOIN.YECY = 'snail';
+							}
+						}
+					}
+				}
+				else {											// disable
+					if (cacheCOIN.YECY != 'disabled') {
+						document.getElementById('E_Checkout_Coin_YECY').innerHTML = '<img src=\"images/yecy-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'YECY\');\">';
+						cacheCOIN.YECY = 'disabled';
+					}
 				}
 			}
 
 			if ( coinList[coin] == 'BTC' )	{							// Bitcoin Onchain
 				if (cacheCALC.inputstring >= cacheCONFIG.btc_minvalue) {				// enable
 					if (cacheCALC.inputstring < Number(cacheCONFIG.btc_zeroconf)) {			// 0-conf allowed (rabbit)
-						document.getElementById('E_Checkout_Coin_BTC').innerHTML = '<img src=\"images/btc-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTC\');\">';
+						if (cacheCOIN.BTC != 'rabbit') {
+							document.getElementById('E_Checkout_Coin_BTC').innerHTML = '<img src=\"images/btc-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTC\');\">';
+							cacheCOIN.BTC = 'rabbit';
+						}
 					}
 					else {										// confirmation required
 						conftime = (cacheCONFIG.btc_minconf * cacheCONFIG.btc_blocktime);
 						if (conftime < 180) {							// less than three minutes (turtle)
-							document.getElementById('E_Checkout_Coin_BTC').innerHTML = '<img src=\"images/btc-80x80-turtle.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTC\');\">';
+							if (cacheCOIN.BTC != 'turtle') {
+								document.getElementById('E_Checkout_Coin_BTC').innerHTML = '<img src=\"images/btc-80x80-turtle.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTC\');\">';
+								cacheCOIN.BTC = 'turtle';
+							}
 						}
 						else {									// more than three minutes (snail)
-							document.getElementById('E_Checkout_Coin_BTC').innerHTML = '<img src=\"images/btc-80x80-snail.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTC\');\">';
+							if (cacheCOIN.BTC != 'snail') {
+								document.getElementById('E_Checkout_Coin_BTC').innerHTML = '<img src=\"images/btc-80x80-snail.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTC\');\">';
+								cacheCOIN.BTC = 'snail';
+							}
 						}
 					}
 				}
 				else {											// disable
-					document.getElementById('E_Checkout_Coin_BTC').innerHTML = '<img src=\"images/btc-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTC\');\">';
+					if (cacheCOIN.BTC != 'disabled') {
+						document.getElementById('E_Checkout_Coin_BTC').innerHTML = '<img src=\"images/btc-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTC\');\">';
+						cacheCOIN.BTC = 'disabled';
+					}
 				}
 			}
 
 			if ( coinList[coin] == 'BTCLN' )	{						// Bitcoin Lightning
 				if ( (cacheCALC.inputstring >= cacheCONFIG.btcln_minvalue) && (cacheCALC.inputstring <= ((cacheCONFIG.btcln_maxvalue / 100000000) * cacheEXCH.BTC)) ){	
-					document.getElementById('E_Checkout_Coin_BTCLN').innerHTML = '<img src=\"images/btcln-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTCLN\');\">';
+					if (cacheCOIN.BTCLN != 'rabbit') {
+						document.getElementById('E_Checkout_Coin_BTCLN').innerHTML = '<img src=\"images/btcln-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTCLN\');\">';
+						cacheCOIN.BTCLN = 'rabbit';
+					}
 				}
 				else {											// disable
-					document.getElementById('E_Checkout_Coin_BTCLN').innerHTML = '<img src=\"images/btcln-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTCLN\');\">';
+					if (cacheCOIN.BTCLN != 'disabled') {
+						document.getElementById('E_Checkout_Coin_BTCLN').innerHTML = '<img src=\"images/btcln-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTCLN\');\">';
+						cacheCOIN.BTCLN = 'disabled';
+					}
 				}
 			}
 		}

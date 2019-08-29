@@ -108,6 +108,11 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						<th width="20%" id="E_checkoutFIAT"></th>
 						<td width="40%" id="E_checkoutBTCamount">0.00000000</br>BTC</td>
 					</tr>
+					<tr>
+						<td width="40%" id="E_checkoutYECamount">0.00000000</br>YEC</td>
+						<th width="20%" id="E_checkoutCENTRE"></th>
+						<td width="40%" id="E_checkoutRIGHT"></td>
+					</tr>
 				</table>
 			</div>
 
@@ -150,7 +155,7 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 				<div id="divCheckoutZECT"  class="CheckoutCoin">
 					<table>
-						<tr><td id="E_Checkout_Coin_ZECT"><img src="./images/zect-80x80.png" width="80" height="80" onclick="B_checkout('ZECT');"></td></tr>
+						<tr><td id="E_Checkout_Coin_ZECT"><img src="./images/zect-80x80-disabled.png" width="80" height="80" onclick="B_checkout('ZECT');"></td></tr>
 						<tr><td>ZEC Transparent</td></tr>
 						<tr><td>&nbsp;</td></tr>
 					</table>
@@ -158,15 +163,32 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 				<div id="divCheckoutZECZ"  class="CheckoutCoin">
 					<table>
-						<tr><td id="E_Checkout_Coin_ZECZ"><img src="./images/zecz-80x80.png" width="80" height="80" onclick="B_checkout('ZECZ');"></td></tr>
+						<tr><td id="E_Checkout_Coin_ZECZ"><img src="./images/zecz-80x80-disabled.png" width="80" height="80" onclick="B_checkout('ZECZ');"></td></tr>
 						<tr><td>ZEC Shielded</td></tr>
 						<tr><td>&nbsp;</td></tr>
 					</table>
 				</div>
 
+				<div id="divCheckoutYECS"  class="CheckoutCoin">
+					<table>
+						<tr><td id="E_Checkout_Coin_YECS"><img src="./images/yecs-80x80-disabled.png" width="80" height="80" onclick="B_checkout('YECS');"></td></tr>
+						<tr><td>YEC Transparent</td></tr>
+						<tr><td>&nbsp;</td></tr>
+					</table>
+				</div>
+
+				<div id="divCheckoutYECY"  class="CheckoutCoin">
+					<table>
+						<tr><td id="E_Checkout_Coin_YECY"><img src="./images/yecy-80x80-disabled.png" width="80" height="80" onclick="B_checkout('YECY');"></td></tr>
+						<tr><td>YEC Shielded</td></tr>
+						<tr><td>&nbsp;</td></tr>
+					</table>
+				</div>
+
+
 				<div id="divCheckoutBTCLN" class="CheckoutCoin">
 					<table>
-						<tr><td id="E_Checkout_Coin_BTCLN"><img src="./images/btcln-80x80.png"   width="80" height="80" onclick="B_checkout('BTCLN');"></td></tr>
+						<tr><td id="E_Checkout_Coin_BTCLN"><img src="./images/btcln-80x80-disabled.png"   width="80" height="80" onclick="B_checkout('BTCLN');"></td></tr>
 						<tr><td style="text-align: center;">BTC Lightning</td></tr>
 						<tr><td id="E_checkoutBTCLNlimit" style="text-align: center;"></td></tr>
 					</table>
@@ -174,7 +196,7 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 				<div id="divCheckoutBTC"   class="CheckoutCoin">
 					<table>
-						<tr><td id="E_Checkout_Coin_BTC"><img src="./images/btc-80x80.png"      width="80" height="80" onclick="B_checkout('BTC');" title="BTC : Bitcoin (NOT PRIVATE)"></td></tr>
+						<tr><td id="E_Checkout_Coin_BTC"><img src="./images/btc-80x80-disabled.png"      width="80" height="80" onclick="B_checkout('BTC');" title="BTC : Bitcoin (NOT PRIVATE)"></td></tr>
 						<tr><td>BTC On-Chain</td></tr>
 						<tr><td>&nbsp;</td></tr>
 					</table>
@@ -197,6 +219,7 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			<div id="divWalletAddress">No Address</div>
 		</div>
 		<div id="divWalletCoin">
+
 			<div id="divWalletZECT"  class="WalletCoin">
 				<table>
 					<tr><td><img src="./images/zect-80x80.png" width="80" height="80" onclick="B_wallet('ZECT');"></td></tr>
@@ -212,6 +235,23 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					<tr><td id="E_walletZECZfiat">0.00 USD</td></tr>
 				</table>
 			</div>
+
+			<div id="divWalletYECS"  class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/yecs-80x80.png" width="80" height="80" onclick="B_wallet('YECS');"></td></tr>
+					<tr><td id="E_walletYECSamount">0.00000000 YEC</td></tr>
+					<tr><td id="E_walletYECSfiat">0.00 USD</td></tr>
+				</table>
+			</div>
+
+			<div id="divWalletYECY"  class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/yecy-80x80.png" width="80" height="80" onclick="B_wallet('YECY');"></td></tr>
+					<tr><td id="E_walletYECYamount">0.00000000 YEC</td></tr>
+					<tr><td id="E_walletYECYfiat">0.00 USD</td></tr>
+				</table>
+			</div>
+
 
 			<div id="divWalletBTCLN" class="WalletCoin">
 				<table>
@@ -279,6 +319,12 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					<p>Zcash is the default coin &amp; <i>required</i> by this software.</p>
 				</li>
 	
+				<li><h3>Why Ycash (YEC) ?</h3>
+					<p>Ycash uses the same tech as Zcash.</p>
+					<p>Its a new project that I've helped with.</p>
+					<p>They're nice people to work with.</p>
+				</li>
+
 				<li><h3>Why Bitcoin (BTC) ?</h3>
 					<p>Everyone has heard of Bitcoin.</p>
 					<p>Everyone who has crypto has Bitcoin.</p>
@@ -431,6 +477,9 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			<h3>ZEC : Zcash (zcashd)</h3>
 			<div id="divStatusZEC"><p>Not connected!</p></div>
 
+			<h3>YEC : Ycash (ycashd)</h3>
+			<div id="divStatusYEC"><p>Not connected!</p></div>
+
 			<h3>BTC : Lightning Network (lnd)</h3>
 			<div id="divStatusBTCLN"><p>Not connected!</p></div>
 
@@ -470,8 +519,8 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	<div id="divFooter">
 		<table width="100%">
 			<tr>
-				<td style="text-align:left; width:25%; vertical-align:top;"><a href="https://forum.zcashcommunity.com/t/zcash-point-of-sale-prototype-funded/33019" target="_blank">Zatsuma (v0.0.6-rc3)</a></td>
-				<td style="text-align:center; width:50%; vertical-align:top;"><a href="https://coinlib.io/apidocs" target="_blank">Powered by CoinLib</a> &amp; <a href="https://grants.zfnd.org" target="_blank">ZF Grants</a></td>
+				<td style="text-align:left; width:25%; vertical-align:top;"><a href="https://forum.zcashcommunity.com/t/zcash-point-of-sale-prototype-funded/33019" target="_blank">(v0.0.7-dev)</a></td>
+				<td style="text-align:center; width:50%; vertical-align:top;"><a href="https://coinlib.io/apidocs" target="_blank">Powered by CoinLib &amp;</a> <a href="https://grants.zfnd.org" target="_blank">ZFnd</a></td>
 				<td style="text-align:right; width:25%; vertical-align:top;"><a href="https://forum.zcashcommunity.com/u/chilebob" target="_blank">ChileBob</a></td>
 			</tr>
 		</table>
