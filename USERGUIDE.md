@@ -1,24 +1,20 @@
-# Zatsuma : User Guide
+# Zatsuma User Guide
 
 ## Installation
 
-The official download site for Zatsuma is github, the repository is https://github.com/ChileBob/Zatsuma
+Download Zatsuma from the [main GitHub repo](https://github.com/ChileBob/Zatsuma).
 
-There's a manual installation guide (INSTALL.md) or you can use the install script (setup).
+There's a [manual installation guide](https://github.com/ChileBob/Zatsuma/blob/master/INSTALL.md), or you can [use the install script](https://github.com/ChileBob/Zatsuma/blob/master/INSTALL.md#the-easy-way---use-the-install-script).
 
 Zatsuma is designed for Ubuntu Linux.
 
-
 ## Admin User
 
-The admin user has no special privileges, its the default user created when zatsuma is installed.
+The admin user has no special privileges. It is the default user created when Zatsuma is installed.
 
-As with all user accounts the password is randomly generated for several reasons. Humans are really bad at choosing good passwords and Zatsuma uses Mysql which has password policy that must be followed. 
+As with all user accounts, the password is randomly generated for a couple of reason: 1) Humans are bad at choosing good passwords, and 2) Zatsuma uses MySQL which has a password policy. The default policy requires passwords to have a minimum length, contain regular characters, capitals, and some special characters.
 
-The default policy requires passwords to have a minimum length, contain regular characters, capitals and some special characters.
-
-The admin user password is shown at the end of the install process. Its only shown once so make a note of it.
-
+The admin user password is shown at the end of the install process. **It is only shown once, so make sure to save it securely.**
 
 ## Adding Users
 
