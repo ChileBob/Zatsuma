@@ -20,6 +20,7 @@ echo -e "- You can use an existing node (not recommended).\n"
 
 read -p 'Zatsuma Shop Daemon       : ' user_zatsuma
 read -p 'ZEC : Zcash   (required)  : ' user_zec
+read -p 'YEC : Ycash   (optional)  : ' user_yec
 read -p 'BTC : Bitcoin (on-chain)  : ' user_btc
 read -p 'BTC : Bitcoin (lightning) : ' user_btcln
 
@@ -39,6 +40,7 @@ then
 fi
 
 start_zec="none"					# get startup instructions
+start_yec="none"
 start_btc="none"
 start_btcln="none"
 start_zatsuma="none"
@@ -176,6 +178,22 @@ else
 	fi
 fi
 
+if [ -d "/home/$user_yec" ] && [ ! -z "$user_yec" ]
+then
+	echo "...using existing account '$user_yec' for ycash node"
+	crontab -u $user_yec -l | grep -v zatsuma >/tmp/crontab 2>/dev/null
+	crontab -u $user_yec /tmp/crontab
+else
+	if [ ! -z "$user_yec" ]
+	then
+		echo -e "\n...creating new user account '$user_yec' for ycash node"
+		adduser $user_yec	
+		mkdir /home/$user_yec/.zatsuma 2>/dev/null
+		chown -R $user_yec.$user_yec /home/$user_yec/.zatsuma
+	fi
+fi
+
+
 if [ -d "/home/$user_btc" ] && [ ! -z "$user_btc" ]
 then
 	echo "...using existing account '$user_btc' for bitcoin node"
@@ -225,6 +243,7 @@ echo "...installing zatsuma daemons"
 cp shopd/*.txt /home/$user_zatsuma/.zatsuma
 cp shopd/shopd shopd/*.txt /usr/local/bin/zatsuma
 cp shopd-zec/shopd-zec /usr/local/bin/zatsuma
+cp shopd-zec/shopd-yec /usr/local/bin/zatsuma
 cp shopd-btc/shopd-btc /usr/local/bin/zatsuma
 cp shopd-btcln/shopd-btcln /usr/local/bin/zatsuma
 chmod +x /usr/local/bin/zatsuma/*
@@ -239,6 +258,13 @@ then
 	echo "...installing zatsuma shop daemon for zcash (shopd-zec)"
 	cp shopd-zec/shopd-zec.conf /home/$user_zec/.zatsuma
 	chown -R $user_zec.$user_zec /home/$user_zec/.zatsuma
+fi
+
+if [ ! -z "$user_yec" ]
+then
+	echo "...installing zatsuma shop daemon for ycash (shopd-yec)"
+	cp shopd-btc/shopd-yec.conf /home/$user_yec/.zatsuma
+	chown -R $user_yec.$user_yec /home/$user_yec/.zatsuma
 fi
 
 if [ ! -z "$user_btc" ]
@@ -267,30 +293,37 @@ mysql -u root -p < /tmp/zatsuma.sql
 
 if [ "$start_zatsuma" == "auto" ] 			# auto/manual start for zatsuma daemon
 then
-	echo "...generating crontab for '$user_zatsuma' user to start shopd automatically"
-	crontab -u $user_zatsuma -l | grep -v "zatsuma/shopd" >/tmp/crontab
-	echo "@reboot /usr/local/bin/zatsuma/shopd >/dev/null 2>&1" >>/tmp/crontab
-	echo "* * * * * /usr/local/bin/zatsuma/shopd -coinlib >/dev/null 2>&1" >>/tmp/crontab
-	echo "*/3 * * * * /usr/local/bin/zatsuma/shopd -duckdns >/dev/null 2>&1" >>/tmp/crontab
-	crontab -u $user_zatsuma /tmp/crontab
-	rm /tmp/crontab
+	# TODO: Change to use systemd
 fi 
 
 
 echo "...configuring webserver"
 sudo a2dissite 000-default.conf
-cp webserver/000-default.conf /etc/apache2/sites-available
+cp webserver/zatsuma.conf /etc/apache2/sites-available
 cp -r webserver/* /var/www	
 
 if [ -z "$duckdns_domain" ]
 then
 	echo "...zatsuma installed for local machine use only"
+	echo "...adding zatstuma.localhost to /etc/hosts"
+
+	LOCALHOST=`grep 127.0.0.1 /etc/hosts`
+	if [[ $LOCALHOST == *"zatsuma.localhost"* ]]
+	then
+		echo "...zatsuma.localhost already in /etc/hosts"
+	else
+		echo "...adding zatstuma.localhost to /etc/hosts"
+		echo "$LOCALHOST zatsuma.localhost" >/tmp/zatsuma-hosts
+		grep -v 127.0.0.1 /etc/hosts >>/tmp/zatsuma-hosts
+		mv /tmp/zatsuma-hosts /etc/hosts
+		chmod 655 /etc/hosts
+	fi
 else
 	echo "...updating website config for remote access to http://$duckdns_domain.duckdns.org"
-	sed -i "s/\#ServerName REPLACE/ServerName ${duckdns_domain}/g" /etc/apache2/sites-available/000-default.conf
-	sed -i "s/http:\/\/127\.0\.0\.1/https:\/\/${duckdns_domain}.duckdns.org/g" /var/www/html/js/zatsuma.js
+	sed -i "s/\#ServerName REPLACE/ServerName ${duckdns_domain}/g" /etc/apache2/sites-available/zatsuma.conf
+	sed -i "s/http:\/zatsuma.localhost/https:\/\/${duckdns_domain}.duckdns.org/g" /var/www/html/js/zatsuma.js
 fi
-sudo a2ensite 000-default.conf
+sudo a2ensite zatsuma.conf
 
 chmod +x /var/www/cgi-bin/zatsuma.cgi
 
@@ -322,7 +355,7 @@ then
 	certbot --apache
 
 	echo "...patching zatsuma javascript client to use SSL"
-	sed -i "s/http:\/\/127.0.0.1\/cgi-bin\/zatsuma.cgi/https:\/\/${duckdns_domain}.duckdns.org\/cgi-bin\/zatsuma.cgi/g" /etc/apache2/sites-available/000-default.conf
+	sed -i "s/http:\/\/127.0.0.1\/cgi-bin\/zatsuma.cgi/https:\/\/${duckdns_domain}.duckdns.org\/cgi-bin\/zatsuma.cgi/g" /etc/apache2/sites-available/zatsuma.conf
 
 	echo "...restarting webserver"
 	service apache2 restart 
@@ -408,16 +441,86 @@ export HOME=$OLDHOME
 ZCASHD=`which zcashd`
 if [ "$start_zec" == "auto" ] 					# auto/manual start for zcashd
 then
-	echo "...generating crontab for $user_zec user to start zcashd automatically"
-	crontab -u $user_zec -l | grep -v zcashd >/tmp/crontab 2>/dev/null
-	
-	echo "@reboot $ZCASHD >/dev/null 2>&1" >>/tmp/crontab
-	echo "@reboot /usr/local/bin/zatsuma/shopd-zec >/dev/null 2>&1" >>/tmp/crontab
-	crontab -u $user_zec /tmp/crontab
-	rm /tmp/crontab
+	#TODO: Change to use systemd
 fi 
 
 echo "...zcash installation complete"	
+
+
+if [ ! -z "$user_yec" ]
+then
+
+	echo -e "\nINSTALLING YCASH (ycashd)\n"
+
+	OLDHOME=$HOME
+	export HOME=/home/$user_yec
+
+	echo -e "...downloading ycash version 2.0.6.1 from github"
+	wget https://github.com/ycashfoundation/yecwallet/releases/download/2.0.6.1/linux-binaries-ycash-v2.0.6.1.tar.gz
+
+	echo -e "...extracting ycashd, ycash-cli, yecwallet"
+	tar xf linux-binaries-ycash-v2.0.6.1.tar.gz
+
+	echo -e "...moving binaries to /usr/local/bin"
+	mv ycash-v2.0.6.1/y* /usr/local/bin
+
+	touch /home/$user_yec/.ycash/ycash.conf					# setup zcash config
+	if [ -d "/home/$user_yec/.ycash/ycash.conf" ]
+	then
+		echo "...checking/updating ycash.conf settings"
+
+		if [ ! "`grep rpcuser /home/$user_yec/.ycash/ycash.conf`" ]
+		then
+			echo "...adding rpcuser"
+			echo "rpcuser=$user_yec" >>/home/$user_yec/.ycash/ycash.conf	
+		else
+			echo "...rpcuser already set"
+		fi
+	
+		if [ ! "`grep rpcport /home/$user_yec/.ycash/ycash.conf`" ]
+		then
+			echo "...adding rpcport"
+			echo "rpcport=8832" >>/home/$user_yec/.ycash/ycash.conf	
+		else
+			echo "...rpcport already set"
+		fi
+	
+		if [ ! "`grep rpcpassword /home/$user_yec/.ycash/ycash.conf`" ]
+		then
+			echo "...adding random rpcpassword"
+			RPCPASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+			echo "rpcpassword=$RPCPASSWORD" >>/home/$user_yec/.ycash/ycash.conf	
+		else
+			echo "...rpcpassword already set"
+		fi
+	
+		if [ ! "`grep walletnotify /home/$user_yec/.ycash/ycash.conf`" ]
+		then
+			echo "...adding walletnotify"
+			echo "walletnotify=/usr/local/bin/zatsuma/shopd-yec -notify %s" >>/home/$user_yec/.ycash/ycash.conf
+		else 
+			echo "...walletnotify already set"
+		fi
+	else 
+		echo -e "...generating new ycash configuration /home/$user_yec/.ycash/ycash.conf"
+		RPCPASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+		echo -e "mainnet=1\nlisten=1\naddnode=mainnet.ycash.xyz\nrpcport=8832\nwalletnotify=/usr/local/bin/zatsuma/shopd-yec -notify %s\nrpcuser=$user_yec\nrpcpassword=$RPCPASSWORD" >/home/$user_yec/.ycash/ycash.conf
+		echo "...setting ownership of /home/$user_yec/.ycash to $user_yec"
+		chown -R $user_yec.$user_yec /home/$user_yec/.ycash
+	fi
+
+	if [ $user_yec != $user_zec ]
+	then
+		echo -e "...skipping zcash parameters, already downloaded for user $user_yec"
+	else
+		echo -e "...downloading zcash parameters, this will take a while unless you already have them\n"	
+		sudo --preserve-env --user=$user_yec /usr/bin/zcash-fetch-params	
+	fi
+
+	export HOME=$OLDHOME
+else
+	echo -e "...not installing ycashd"
+fi
 
 
 
@@ -642,10 +745,12 @@ echo "/usr/local/bin/zatsuma/shopd --adduser USERNAME		(random password is gener
 echo -e "\nFoz Zatsuma to work properly please ensure the following :-"
 echo -e "\n- all coin nodes must be running and synchronized with their networks :-"
 echo "  - zcashd"
+echo "  - ycashd"
 echo "  - bitcoind"
 echo "  - lnd"
 echo -e "\n- the zatsuma shop and node daemons must be running :-"
 echo "  - shopd"
 echo "  - shopd-zec"
+echo "  - shopd-yec"
 echo "  - shopd-btc"
 echo "  - shopd-btcln"
