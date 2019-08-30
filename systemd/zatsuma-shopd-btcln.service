@@ -2,6 +2,8 @@
 Description=Zatsuma Shop Daemon (Bitcoin Lightning Network)
 After=zatsuma-shopd.service
 PartOf=zatsuma.service
+Wants=zatsuma-lnd.service
+Wants=zatsuma-bitcoind.service
 StartLimitIntervalSec=0
 
 [Service]

@@ -5,7 +5,7 @@ PartOf=zatsuma.service
 StartLimitIntervalSec=0
 
 [Service]
-Type=Simple
+Type=simple
 User=USERNAME
 ExecStart=/usr/local/bin/zatsuma/shopd-yec
 

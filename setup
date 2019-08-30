@@ -304,8 +304,7 @@ cp -r webserver/* /var/www
 
 if [ -z "$duckdns_domain" ]
 then
-	echo "...zatsuma installed for local machine use only"
-	echo "...adding zatstuma.localhost to /etc/hosts"
+	echo "...zatsuma installed for local use only"
 
 	LOCALHOST=`grep 127.0.0.1 /etc/hosts`
 	if [[ $LOCALHOST == *"zatsuma.localhost"* ]]
