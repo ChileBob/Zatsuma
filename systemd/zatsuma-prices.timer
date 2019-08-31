@@ -1,0 +1,7 @@
+[Unit]
+Description=Zatsuma Timer (Exchange Rates)
+
+[Timer]
+OnUnitActiveSec=1min
+Unit=zatsuma-prices.service
+

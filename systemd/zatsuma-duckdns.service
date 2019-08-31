@@ -1,0 +1,8 @@
+[Unit]
+Description="Zatsuma DuckDNS (Dynamic IP)"
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/zatsuma/shopd -duckdns
+User=USERNAME
+

@@ -1,0 +1,7 @@
+[Unit]
+Description=Zatsuma Timer (DuckDNS)
+
+[Timer]
+OnUnitActiveSec=2min
+Unit=zatsuma-duckdns.service
+

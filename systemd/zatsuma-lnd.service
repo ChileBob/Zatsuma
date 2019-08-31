@@ -1,0 +1,14 @@
+[Unit]
+Description=Zatsuma Lightning Node (lnd)
+After=zatsuma-shopd-btcln.service
+Requires=zatsuma-bitcoind.service
+After=zatsuma-bitcoind.service
+PartOf=zatsuma.service
+
+[Service]
+ExecStartPre=/bin/sleep 60
+Type=simple
+User=USERNAME
+ExecStart=/home/bob/gocode/bin/lnd
+ExecStop=/home/bob/gocode/bin/lncli stop
+
