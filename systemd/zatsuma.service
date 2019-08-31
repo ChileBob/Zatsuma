@@ -7,9 +7,14 @@ Wants=zatsuma-shopd-zec.service
 Wants=zatsuma-shopd-yec.service
 Wants=zatsuma-shopd-btc.service
 Wants=zatsuma-shopd-btcln.service
+Wants=zatsuma-prices.timer
+Wants=zatsuma-duckdns.timer
 
 [Service]
 Type=simple
 User=USERNAME
 ExecStart=/usr/local/bin/zatsuma/shopd
+
+[Install]
+WantedBy=multi-user.target
 
