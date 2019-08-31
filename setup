@@ -39,30 +39,11 @@ then
 	user_btcln="$user_btc"	
 fi
 
-start_zec="none"					# get startup instructions
-start_yec="none"
-start_btc="none"
-start_btcln="none"
 start_zatsuma="none"
 
-echo -e "\nIf you want a node daemon to start automatically, type auto :-"
+echo -e "\nIf you want a zatsuma to start automatically, type auto :-"
 
 read -p 'Zatsuma Shop Daemon       : ' start_zatsuma
-
-if [ ! -z $user_zec ]
-then
-	read -p 'Zcash node                : ' start_zec
-fi
-
-if [ ! -z $user_btc ]
-then
-	read -p 'Bitcoin node (on-chain)   : ' start_btc
-fi
-
-if [ ! -z $user_btcln ]
-then
-	read -p 'Bitcoin node (lightning)  : ' start_btcln
-fi
 
 echo -e "\nChoose a password for the zatsuma database (least 10 chars and must contain letters, capitals, numbers and symbols :-"
 read -p 'MYSQL zatsuma password    : ' mysql_zatsuma
@@ -151,8 +132,6 @@ echo "...creating user accounts"
 if [ -d "/home/$user_zatsuma" ] && [ ! -z "$user_zatsuma" ]
 then
 	echo "...using existing account '$user_zatsuma' for zatsuma"
-	crontab -u $user_zatsuma -l | grep -v zatsuma >/tmp/crontab 2>/dev/null
-	crontab -u $user_zatsuma /tmp/crontab
 	mkdir /home/$user_zatsuma/.zatsuma 2>/dev/null
 else
 	if [ ! -z "$user_zatsuma" ]
@@ -166,8 +145,6 @@ fi
 if [ -d "/home/$user_zec" ] && [ ! -z "$user_zec" ]
 then
 	echo "...using existing account '$user_zec' for zcash node"
-	crontab -u $user_zec -l | grep -v zatsuma >/tmp/crontab 2>/dev/null
-	crontab -u $user_zec /tmp/crontab
 else
 	if [ ! -z "$user_zec" ]
 	then
@@ -181,8 +158,6 @@ fi
 if [ -d "/home/$user_yec" ] && [ ! -z "$user_yec" ]
 then
 	echo "...using existing account '$user_yec' for ycash node"
-	crontab -u $user_yec -l | grep -v zatsuma >/tmp/crontab 2>/dev/null
-	crontab -u $user_yec /tmp/crontab
 else
 	if [ ! -z "$user_yec" ]
 	then
@@ -197,8 +172,6 @@ fi
 if [ -d "/home/$user_btc" ] && [ ! -z "$user_btc" ]
 then
 	echo "...using existing account '$user_btc' for bitcoin node"
-	crontab -u $user_btc -l | grep -v zatsuma >/tmp/crontab 2>/dev/null
-	crontab -u $user_btc /tmp/crontab
 else
 	if [ ! -z "$user_btc" ]
 	then
@@ -346,18 +319,18 @@ fi
 
 chmod +x /usr/local/bin/zatsuma/*			# make daemons executable
 
+if [ "$start_zatsuma" == "auto" ] 			# auto/manual start for zatsuma daemon
+then
+	echo "TODO: Add [Install] to zatsuma.service systemd config"
+fi 
+
+
 echo "...creating empty zatsuma database, please enter your MYSQL root password :-"
 
 # Note: Really needs to archive & drop any existing database
 echo -e "create database zatsuma;\nGRANT ALL PRIVILEGES ON zatsuma.* TO 'zatsuma'@'localhost' IDENTIFIED BY '$mysql_zatsuma';\nuse zatsuma;" >/tmp/zatsuma.sql
 cat shopd/zatsuma.sql >>/tmp/zatsuma.sql
 mysql -u root -p < /tmp/zatsuma.sql
-	
-
-if [ "$start_zatsuma" == "auto" ] 			# auto/manual start for zatsuma daemon
-then
-	# TODO: Add [Install] to zatsuma systemd
-fi 
 
 echo "...configuring webserver"
 sudo a2dissite 000-default.conf
@@ -499,13 +472,6 @@ OLDHOME=$HOME
 export HOME=/home/$user_zec
 sudo --preserve-env --user=$user_zec /usr/bin/zcash-fetch-params	
 export HOME=$OLDHOME
-
-
-ZCASHD=`which zcashd`
-if [ "$start_zec" == "auto" ] 					# auto/manual start for zcashd
-then
-	#TODO: Change to use systemd
-fi 
 
 echo "...zcash installation complete"	
 
@@ -774,8 +740,7 @@ then
 		echo -e "Before you can use Lightning Network you must :-"
 		echo -e "- wait until your bitcoin node has fully syncronised"
 		echo -e "- start your lighting node"
-		echo -e "- create a wallet"
-		echo -e "- unlock the wallet"
+		echo -e "- create and unlock a wallet"
 		echo -e "- wait until your lightning node has syncronised with bitcoin"
 		echo -e "- fund the wallet"
 		echo -e "- open a channel with incoming capacity\n"
