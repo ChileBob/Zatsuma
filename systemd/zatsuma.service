@@ -13,6 +13,3 @@ Type=simple
 User=USERNAME
 ExecStart=/usr/local/bin/zatsuma/shopd
 
-[Install]
-WantedBy=multi-user.target
-
