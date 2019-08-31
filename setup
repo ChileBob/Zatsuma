@@ -257,6 +257,17 @@ echo "...generating systemd for zatsuma"
 cp systemd/zatsuma.service /etc/systemd/system
 sed -i "s/USERNAME/$user_zatsuma/g" /etc/systemd/system/zatsuma.service
 
+cp systemd/zatsuma-prices.timer /etc/systemd/system
+cp systemd/zatsuma-prices.service /etc/systemd/system
+sed -i "s/USERNAME/$user_zatsuma/g" /etc/systemd/system/zatsuma-prices.service
+
+if [ ! -z "$duckdns_domain" ]
+then
+	cp systemd/zatsuma-duckdns.timer /etc/systemd/system
+	cp systemd/zatsuma-duckdns.service /etc/systemd/system
+	sed -i "s/USERNAME/$user_zatsuma/g" /etc/systemd/system/zatsuma-duckdns.service
+fi
+
 if [ ! -z "$user_zec" ]					# generate config dirs & files
 then
 	echo "...installing zatsuma shop daemon for zcash (shopd-zec)"
