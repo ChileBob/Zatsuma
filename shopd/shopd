@@ -365,6 +365,7 @@ while(1) { 													# MAIN LOOP
 		if ($config_mtime > $config{'updated'}) {								
 			&config_load("$installdir/shopd.conf");							
 			&config_get();									
+			$config{'updated'} = $config_mtime;
 		}										
 
 		$notify->{'message'} = 0;									# get timestamp of last message for this user (or all users)
@@ -802,7 +803,6 @@ sub config_load {
 
 	&debug("Loading config file ($_[0])");
 	%config = ();
-	$config{'updated'} = (stat("$_[0]"))[9];
 	open (CONFIG, "$_[0]") || die ("Cant open $_[0]");
 	while (my $line = <CONFIG>) {
 		chop($line);
