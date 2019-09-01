@@ -1240,9 +1240,16 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 					cacheNODE.btcln.status = data.node.btcln.status;
 		
 					html = '<table>\n';
-					html += '<tr><th>Version</th><td align="right">' + data.node.btcln.status.version + '</td></tr>\n';
-					html += '<tr><th>Blocks</th><td align="right">' + data.node.btcln.status.blocks + '</td></tr>\n';
-					html += '<tr><th>Connections</th><td align="right">' + data.node.btcln.status.connections + '</td></tr>\n';
+
+					if (typeof data.node.btcln.status.version != 'undefined') {
+						html += '<tr><th>Version</th><td align="right">' + data.node.btcln.status.version + '</td></tr>\n';
+						html += '<tr><th>Blocks</th><td align="right">' + data.node.btcln.status.blocks + '</td></tr>\n';
+						html += '<tr><th>Connections</th><td align="right">' + data.node.btcln.status.connections + '</td></tr>\n';
+					}
+					else {
+						html += '<tr><th>Connections</th><td align="right">No Channels</td></tr>\n';
+					}
+
 
 					if (cacheCONFIG.btcln_allow == 1) { 
 						html += '<tr><th>Lightning Payments</th><td align="right">Enabled</td></tr>\n'; 
