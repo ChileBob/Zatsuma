@@ -2,6 +2,9 @@
 Description=Zatsuma Timer (DuckDNS)
 
 [Timer]
+OnBootSec=1min
 OnUnitActiveSec=2min
 Unit=zatsuma-duckdns.service
 
+[Install]
+WantedBy=zatsuma.service
