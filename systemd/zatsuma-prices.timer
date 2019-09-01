@@ -3,8 +3,8 @@ Description=Zatsuma Timer (Exchange Rates)
 
 [Timer]
 OnBootSec=1min
-OnUnitActiveSec=1min
-Unit=zatsuma-prices.target
+OnUnitInactiveSec=1min
+Unit=zatsuma-prices.service
 
 [Install]
-WantedBy=zatsuma.service
+WantedBy=network.target
