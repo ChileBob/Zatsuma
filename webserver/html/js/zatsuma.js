@@ -21,14 +21,18 @@ var cacheDISPLAY = {										// display object cache
 	backgroundselected: '#2e7ad0',								// active background colour 
 	backgroundunselected: '#000000',							// inactive background colour
 	wallet: 'ZECZ',										// default wallet
-	divname: ''										// current div, can be replaced by event driven updates
+	divname: '',										// current div, can be replaced by event driven updates
+	exchCOIN: 0										// array index of coin/fiat rate to show on checkout
 };
 
 var cacheCONFIG = new Object;									// shop config
 var cacheUSER   = new Object;									// user config
-var cacheEXCH   = new Object;									// exchange rates
 var cacheNODE   = new Object;									// node status
 var cacheORDER  = new Object;									// active order
+
+var cacheEXCH   = new Object;									// exchange rates
+var exchCOIN    = new Array('ZEC', 'YEC', 'BTC');						// supported coins
+var exchRATE    = new Array(0, 0, 0);								// last seen exchange rate
 
 var cacheCOIN   = {										// cache of current coin image
 	ZECT:  'disabled',
@@ -53,6 +57,7 @@ var cacheCALC = {										// checkout calculator vars
 var cacheMESG = {										// message compose
 	user_to: 0
 };
+
 
 var timerCONFIG = {										// timer for autoupdates
 	fast: 5,										// fast updates
@@ -1321,6 +1326,12 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 			if (typeof data.exch != 'undefined') {							// update exchange rates
 				cacheEXCH = data.exch;
 				calculate_exch();									// recalculate displayed prices
+
+				exchRATE[0] = cacheEXCH.ZEC.toFixed(2);
+				exchRATE[1] = cacheEXCH.YEC.toFixed(2);
+				exchRATE[2] = cacheEXCH.BTC.toFixed(2);
+
+				document.getElementById('E_checkoutRIGHT').innerHTML = exchRATE[cacheDISPLAY.exchCOIN] + ' ' + exchCOIN[cacheDISPLAY.exchCOIN] + cacheEXCH.fiat;
 			}
 		}
 
@@ -1626,6 +1637,11 @@ function T_update() {											// timed events/updates
 		}
 
 		if (cacheUSER.privilege > 0) {									// these updates are only for LOGGED IN users
+
+			cacheDISPLAY.exchCOIN++;									// cycle coin exch rate on checkout
+			if (cacheDISPLAY.exchCOIN >= exchCOIN.length) {
+				cacheDISPLAY.exchCOIN = 0;
+			}
 
 			jsonCOMMAND({ req:'mesg_inbox' });								// check for messages
 
