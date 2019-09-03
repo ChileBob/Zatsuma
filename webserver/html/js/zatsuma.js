@@ -35,6 +35,7 @@ var exchCOIN    = new Array('ZEC', 'YEC', 'BTC');						// supported coins
 var exchRATE    = new Array(0, 0, 0);								// last seen exchange rate
 
 var cacheCOIN   = {										// cache of current coin image
+	CASH:  'disabled',
 	ZECT:  'disabled',
 	ZECZ:  'disabled',
 	YECS:  'disabled',
@@ -1391,14 +1392,30 @@ function D_showdiv(divname) {											// Show selected div
 // ******************************************************************************************************************************************************************
 function D_checkout_coin() {										// Update coin images on checkout to enabled/disabled based on config and order value
 
-	var coinList = new Array('ZECT', 'ZECZ', 'BTC', 'BTCLN', 'YECS', 'YECY');				// supported coins
+	var coinList = new Array('ZECT', 'ZECZ', 'BTC', 'BTCLN', 'YECS', 'YECY', 'CASH');			// supported coins
 	var conftime;
 
 	for( var coin = 0; coin < coinList.length; coin++) {			
 		if( isNaN(cacheCALC.inputstring) ) {								// checkout is not a valid number, so do nothing 
 		}
 		else {
-			if ( coinList[coin] == 'ZECT' )	{							// Zcash Transparent
+			if ( coinList[coin] == 'CASH' )	{							// Zcash Transparent
+				if (cacheCALC.inputstring > 0) {						// disable
+					if (cacheCOIN.CASH == 'disabled') {
+						document.getElementById('E_Checkout_Coin_CASH').innerHTML = '<img src=\"images/cash-80x80.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'CASH\');\">';
+						cacheCOIN.CASH = 'enabled';
+					}
+				}
+				else {
+					if (cacheCOIN.CASH != 'disabled') {
+						document.getElementById('E_Checkout_Coin_CASH').innerHTML = '<img src=\"images/cash-80x80-disabled.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'CASH\');\">';
+						cacheCOIN.CASH = 'disabled';
+					}
+				}
+
+			}
+
+			else if ( coinList[coin] == 'ZECT' )	{							// Zcash Transparent
 				if (cacheCALC.inputstring >= cacheCONFIG.zec_minvalue) {				// enable
 					if (cacheCALC.inputstring < Number(cacheCONFIG.zec_zeroconf)) {			// 0-conf allowed (rabbit)
 						if (cacheCOIN.ZECT != 'rabbit') {
@@ -1430,7 +1447,7 @@ function D_checkout_coin() {										// Update coin images on checkout to enabl
 				}
 			}
 
-			if ( coinList[coin] == 'ZECZ' )	{							// Zcash Shielded
+			else if ( coinList[coin] == 'ZECZ' )	{							// Zcash Shielded
 				if (cacheCALC.inputstring >= cacheCONFIG.zec_minvalue) {				// enable
 					if (cacheCALC.inputstring < Number(cacheCONFIG.zec_zeroconf)) {			// 0-conf allowed (rabbit)
 						if (cacheCOIN.ZECZ != 'rabbit') {
@@ -1462,7 +1479,7 @@ function D_checkout_coin() {										// Update coin images on checkout to enabl
 				}
 			}
 
-			if ( coinList[coin] == 'YECS' )	{							// Ycash Transparent
+			else if ( coinList[coin] == 'YECS' )	{							// Ycash Transparent
 				if (cacheCALC.inputstring >= cacheCONFIG.yec_minvalue) {				// enable
 					if (cacheCALC.inputstring < Number(cacheCONFIG.yec_zeroconf)) {			// 0-conf allowed (rabbit)
 						if (cacheCOIN.YECS != 'rabbit') {
@@ -1494,7 +1511,7 @@ function D_checkout_coin() {										// Update coin images on checkout to enabl
 				}
 			}
 
-			if ( coinList[coin] == 'YECY' )	{							// Ycash Shielded
+			else if ( coinList[coin] == 'YECY' )	{							// Ycash Shielded
 				if (cacheCALC.inputstring >= cacheCONFIG.yec_minvalue) {				// enable
 					if (cacheCALC.inputstring < Number(cacheCONFIG.yec_zeroconf)) {			// 0-conf allowed (rabbit)
 						if (cacheCOIN.YECY != 'rabbit') {
@@ -1526,7 +1543,7 @@ function D_checkout_coin() {										// Update coin images on checkout to enabl
 				}
 			}
 
-			if ( coinList[coin] == 'BTC' )	{							// Bitcoin Onchain
+			else if ( coinList[coin] == 'BTC' )	{							// Bitcoin Onchain
 				if (cacheCALC.inputstring >= cacheCONFIG.btc_minvalue) {				// enable
 					if (cacheCALC.inputstring < Number(cacheCONFIG.btc_zeroconf)) {			// 0-conf allowed (rabbit)
 						if (cacheCOIN.BTC != 'rabbit') {
@@ -1558,7 +1575,7 @@ function D_checkout_coin() {										// Update coin images on checkout to enabl
 				}
 			}
 
-			if ( coinList[coin] == 'BTCLN' )	{						// Bitcoin Lightning
+			else if ( coinList[coin] == 'BTCLN' )	{						// Bitcoin Lightning
 				if ( (cacheCALC.inputstring >= cacheCONFIG.btcln_minvalue) && (cacheCALC.inputstring <= ((cacheCONFIG.btcln_maxvalue / 100000000) * cacheEXCH.BTC)) ){	
 					if (cacheCOIN.BTCLN != 'rabbit') {
 						document.getElementById('E_Checkout_Coin_BTCLN').innerHTML = '<img src=\"images/btcln-80x80-rabbit.png\" width=\"80\" height=\"80\" onclick=\"B_checkout(\'BTCLN\');\">';
