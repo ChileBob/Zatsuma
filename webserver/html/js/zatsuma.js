@@ -20,6 +20,7 @@ var cacheDISPLAY = {										// display object cache
 	backgroundselected: '#2e7ad0',								// active background colour 
 	backgroundunselected: '#000000',							// inactive background colour
 	wallet: 'ZECZ',										// default wallet
+	viewQR: 'ZECZ',										// qrcode to show on view orders page
 	divname: '',										// current div, can be replaced by event driven updates
 	exchCOIN: 0										// array index of coin/fiat rate to show on checkout
 };
@@ -726,13 +727,26 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 				document.getElementById('E_checkoutFIAT').innerHTML = cacheCONFIG.fiat;			// set checkout fiat
 				document.getElementById('E_checkoutFIAT_coin').innerHTML = cacheCONFIG.fiat;		// set checkout fiat symbol on coin
 
+
 				document.getElementById('divViewQRcode').innerHTML = '';				// clear QR code
-				if ( (cacheCONFIG.zecz_allow == 1) && (typeof cacheNODE.zec.config.zaddr != 'undefined') ) {	// set memo zaddr if allowed & node is online
+
+				if ( (cacheCONFIG.zecz_allow == 1) && (typeof cacheNODE.zec.config.zaddr != 'undefined') && (cacheDISPLAY.viewQR != 'ZECZ') ) {		// switch to YEC QR
 					jQuery('#divViewQRcode').qrcode ( encodeURI('zcash:' + cacheNODE.zec.config.zaddr) );
 					document.getElementById('divViewGuestbook').style.display = 'block';
+					document.getElementById('divViewMemo').innerHTML = 'Send an encrypted Zcash memo';
+					cacheDISPLAY.viewQR = 'ZECZ';
 				}
-				else {
+
+				else if ( (cacheCONFIG.yecy_allow == 1) && (typeof cacheNODE.yec.config.yaddr != 'undefined') && (cacheDISPLAY.viewQR != 'YECY') ) {	// switch to ZEC QR
+					jQuery('#divViewQRcode').qrcode ( encodeURI('ycash:' + cacheNODE.yec.config.yaddr) );
+					document.getElementById('divViewGuestbook').style.display = 'block';
+					document.getElementById('divViewMemo').innerHTML = 'Send an encrypted Ycash memo';
+					cacheDISPLAY.viewQR = 'YECY';
+				}
+
+				else {											// zcash & ycash nodes not available
 					document.getElementById('divViewGuestbook').style.display = 'none';		// hide the div
+					cacheDISPLAY.viewQR = '';
 				}
 
 				if (cacheDISPLAY.divname == 'Error') {							// clear error page if thats showing
