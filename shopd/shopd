@@ -329,10 +329,10 @@ while(1) { 													# MAIN LOOP
 			elsif ($json->{'cmd[data]'}->{'coin'} eq 'YECS') {						# YCASH TRANSPARENT NOTIFICATION/CONFIRMATION
 
 				if ( $json->{'cmd[data]'}->{'confirmations'} == 0) {					# its a notification
-					my $db_update = $dbh->do("update orders set status = 1, confirmations = $json->{'cmd[data]'}->{'confirmations'}, txid = '$json->{'cmd[data]'}->{'txid'}' where address = '$json->{'cmd[data]'}->{'address'}' and coin = 'ZECT';");
+					my $db_update = $dbh->do("update orders set status = 1, confirmations = $json->{'cmd[data]'}->{'confirmations'}, txid = '$json->{'cmd[data]'}->{'txid'}' where address = '$json->{'cmd[data]'}->{'address'}' and coin = 'YECS';");
 				}
 				else {											# its a confirmation
-					my $db_update = $dbh->do("update orders set confirmations = $json->{'cmd[data]'}->{'confirmations'}, txid = '$json->{'cmd[data]'}->{'txid'}' where address = '$json->{'cmd[data]'}->{'address'}' and coin = 'ZECT';");
+					my $db_update = $dbh->do("update orders set confirmations = $json->{'cmd[data]'}->{'confirmations'}, txid = '$json->{'cmd[data]'}->{'txid'}' where address = '$json->{'cmd[data]'}->{'address'}' and coin = 'YECS';");
 				}
 			}
 
