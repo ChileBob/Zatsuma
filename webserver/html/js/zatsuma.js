@@ -1158,6 +1158,14 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 								document.getElementById('E_wallet' + balance[0] + 'fiat').innerHTML = (balance[1] * cacheEXCH.ZEC).toFixed(2) + ' ' + balance[2];
 							}
 						}
+						if ( (balance[0] == 'YECS') || (balance[0] == 'YECY') ) {											// ZEC fiat value
+							if (isNaN(cacheEXCH.ZEC)) {
+								document.getElementById('E_wallet' + balance[0] + 'fiat').innerHTML = 'No Data';
+							}
+							else {
+								document.getElementById('E_wallet' + balance[0] + 'fiat').innerHTML = (balance[1] * cacheEXCH.YEC).toFixed(2) + ' ' + balance[2];
+							}
+						}
 						if ( (balance[0] == 'BTC') || (balance[0] == 'BTCLN') ) {											// BTC fiat value
 							if (isNaN(cacheEXCH.BTC) ) {
 								document.getElementById('E_wallet' + balance[0] + 'fiat').innerHTML = 'No Data';
