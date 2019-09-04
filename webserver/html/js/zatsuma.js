@@ -843,8 +843,12 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 						var html_del = '<img src=\"images/delete-15x15.png\" onclick=\"B_mesg(\'del\',' + mesg[0] + ');\" title=\"Delete\">';
 						var html_from = '<td onclick=\"B_mesg(\'reply\',' + mesg[0] + ');\" style=\"color:red;\">' + mesg[5] + '</td>';
 						if (mesg[2] == 1) {
-							html_del = '<img src=\"images/zect-15x15.png\" onclick=\"B_mesg(\'del\',' + mesg[0] + ');\" title=\"Delete\">';
+							html_del = '<img src=\"images/zecz-15x15.png\" onclick=\"B_mesg(\'del\',' + mesg[0] + ');\" title=\"Delete\">';
 							html_from = '<td style=\"color:green;\">Zcash Memo</td>';
+						}
+						if (mesg[2] == 2) {
+							html_del = '<img src=\"images/yecy-15x15.png\" onclick=\"B_mesg(\'del\',' + mesg[0] + ');\" title=\"Delete\">';
+							html_from = '<td style=\"color:green;\">Ycash Memo</td>';
 						}
 		
 						html += '<tr>' + html_from + '<th>' + getDatetime(mesg[3]) + '</th><th>' + html_del + '</th></tr>\n';

@@ -253,25 +253,24 @@ while(1) { 													# MAIN LOOP
 
 				}
 
-				elsif ($json->{'cmd[data]'}->{'memo'}) {						# ZCASH SHIELDED MEMO
+				elsif ($json->{'cmd[data]'}->{'memo'} =~ m/^f6/) {					# ZCASH SHIELDED MEMO
+					&debug("Received empty ZECZ memo");
+				}
+
+				else {											# ZCASH SHIELDED MEMO
 					my $db_check = $dbh->prepare("select idx from mesg where txid = '$json->{'cmd[data]'}->{'txid'}';");	# see if we already have it
 					my $db_check_hits = $db_check->execute();
 					if ($db_check_hits < 1) {							# nope, its a new message
 
-						if ($json->{'cmd[data]'}->{'memo'} =~ m/^f60*.$/) {			# if its an empty message, set to null content
-							&debug("Received empty ZEC memo");
-						}
-						else {									# not null, so add to messages
-							&debug("Received ZEC memo");
+						&debug("Received ZEC memo");
 
-							my $hr = HTML::Restrict->new();
-							my $html_safe = $hr->process($json->{'cmd[data]'}->{'memo'});		# strip html & escape chars for mysql
-							$html_safe =~ s/\n/\<br\>/g;								
-	
-							my $db_content = $dbh->quote($html_safe);
-							my $db_update = $dbh->do("insert into mesg (type, content, txid) values (1, $db_content, '$json->{'cmd[data]'}->{'txid'}');");
-							$notify->{'message'} = time;						# trigger client audio
-						}
+						my $hr = HTML::Restrict->new();
+						my $html_safe = $hr->process($json->{'cmd[data]'}->{'memo'});		# strip html & escape chars for mysql
+						$html_safe =~ s/\n/\<br\>/g;								
+
+						my $db_content = $dbh->quote($html_safe);
+						my $db_update = $dbh->do("insert into mesg (type, content, txid) values (1, $db_content, '$json->{'cmd[data]'}->{'txid'}');");
+						$notify->{'message'} = time;						# trigger client audio
 					}
 				}
 			}
@@ -291,26 +290,24 @@ while(1) { 													# MAIN LOOP
 
 				}
 
-				elsif ($json->{'cmd[data]'}->{'memo'}) {						# YCASH SHIELDED MEMO
+				elsif ($json->{'cmd[data]'}->{'memo'} =~ m/^f6/) {					# YCASH SHIELDED MEMO
+					&debug("Received empty YECY memo ");
+				}
+
+				else {											# YCASH SHIELDED MEMO
+					&debug("Received YEC memo");
 
 					my $db_check = $dbh->prepare("select idx from mesg where txid = '$json->{'cmd[data]'}->{'txid'}';");	# see if we already have it
 					my $db_check_hits = $db_check->execute();
 					if ($db_check_hits < 1) {							# nope, its a new message
 
-						if ($json->{'cmd[data]'}->{'memo'} =~ m/^f60*.$/) {			# if its an empty message, set to null content
-							&debug("Received empty YEC memo");
-						}
-						else {									# not null, so add to messages
-							&debug("Received YEC memo");
+						my $hr = HTML::Restrict->new();
+						my $html_safe = $hr->process($json->{'cmd[data]'}->{'memo'});		# strip html & escape chars for mysql
+						$html_safe =~ s/\n/\<br\>/g;								
 
-							my $hr = HTML::Restrict->new();
-							my $html_safe = $hr->process($json->{'cmd[data]'}->{'memo'});		# strip html & escape chars for mysql
-							$html_safe =~ s/\n/\<br\>/g;								
-	
-							my $db_content = $dbh->quote($html_safe);
-							my $db_update = $dbh->do("insert into mesg (type, content, txid) values (2, $db_content, '$json->{'cmd[data]'}->{'txid'}');");
-							$notify->{'message'} = time;						# trigger client audio
-						}
+						my $db_content = $dbh->quote($html_safe);
+						my $db_update = $dbh->do("insert into mesg (type, content, txid) values (2, $db_content, '$json->{'cmd[data]'}->{'txid'}');");
+						$notify->{'message'} = time;						# trigger client audio
 					}
 				}
 			}
