@@ -1,8 +1,8 @@
 [Unit]
 Description=Zatsuma Shop Daemon (Ycash)
-Wants=zatsuma-ycashd.service
-PartOf=zatsuma.service
 StartLimitIntervalSec=0
+Wants=zatsuma-ycashd.service
+Wants=zatsuma.service
 
 [Service]
 Type=simple

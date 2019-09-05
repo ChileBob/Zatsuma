@@ -1,6 +1,8 @@
 [Unit]
 Description="Zatsuma DuckDNS (Dynamic IP)"
+Wants=zatsuma.service
 Wants=zatsuma-duckdns.timer
+PartOf=zatsuma-all.service
 
 [Service]
 Type=oneshot

@@ -1,7 +1,6 @@
 [Unit]
 Description=Zatsuma Ycash Node (ycashd)
-After=zatsuma-shopd-yec.service
-PartOf=zatsuma.service
+PartOf=zatsuma-yec.service
 
 [Service]
 Type=forking

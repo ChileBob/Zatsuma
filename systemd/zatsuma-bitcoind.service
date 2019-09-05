@@ -1,7 +1,7 @@
 [Unit]
 Description=Zatsuma Zcash Node (bitcoind)
-After=zatsuma-shopd-btc.service
-PartOf=zatsuma.service
+PartOf=zatsuma-all.service
+PartOf=zatsuma-btc.service
 
 [Service]
 Type=forking

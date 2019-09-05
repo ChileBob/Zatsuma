@@ -1,7 +1,6 @@
 [Unit]
 Description=Zatsuma Zcash Node (zcashd)
-After=zatsuma-shopd-zec.service
-PartOf=zatsuma.service
+PartOf=zatsuma-zec.service
 
 [Service]
 Type=forking
