@@ -4,7 +4,7 @@
 <head>
 <title>Zatsuma</title>
 <meta charset="utf-8">
-<meta name="description" content="Zatsuma : Zcash/Bitcoin Point-Of-Sale : ChileBob">
+<meta name="description" content="Zcash/Bitcoin/Lightning/Ycash Crypto Point-Of-Sale">
 <meta name="robots" content="index, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -285,15 +285,9 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			<h2>Legal &amp; Disclaimer</h2>
 	
 			<ul>
-				<li>The author <i><b>IS NOT RESPONSIBLE</b></i> for any damage or loss, financial or otherwise.</li>
-				<li>Use this software <i><b>AT YOUR OWN RISK</b></i></li>
-				<li><a href="https://electriccoin.co" target="_blank">The Electric Coin Company (ECC)</a> &amp; <a href="https://zfnd.org" target="_blank">Zcash Foundation (ZFnd)</a> :-
-					<ul>
-						<li><b><i>HAVE NOT REVIEWED THIS SOFTWARE.</i></b></li>
-						<li><b><i>HAVE NOT ENDOSED THIS SOFTWARE.</i></b></li>
-						<li><b><i>DO NOT SUPPORT THIS SOFTWARE.</i></b></li>
-					</ul>
-				<li>Zcash trademarks belong to ECC.</li>
+				<li><i><b>The author IS NOT RESPONSIBLE for any damage or loss, financial or otherwise.</b></i></li>
+				<li><i><b>Use this software AT YOUR OWN RISK</b></i>.</li>
+				<li><i><b>Released under MIT Licence.</b></i></li>
 			</ul>
 	
 			<h2>Frequently Asked Questions</h2>
@@ -301,12 +295,12 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				<li><h3>What does Zatsuma do?</h3>
 
 					<p>Its a crypto checkout for person-to-person sales, ie: a shop, market, bar, pizza delivery, girl scouts selling cookies, etc.</p>
-					<p>Unlike a crypto wallet it <i>can only receive funds</i>, making it safer for use by a group of people.</p>
+					<p>It can only <i>receive funds</i>, making it safer for use by a group of people.</p>
 				</li>
 
 				<li><h3>How do I get it?</h3>
-					<p>Zatsuma has been funded by <a href="https://zfgrants.zfnd.org" target="_blank">ZF Grants</a> is available to all.</p>
-					<p>Updates are posted on <a href="https://forum.zcashcommunity.com/t/zcash-point-of-sale-project-prototype/33019/28" target="_blank">Zcash Community Forum</a>, feel free to join in the discussion.</p>
+					<p>Zatsuma has been funded by <a href="https://zfgrants.zfnd.org" target="_blank">ZF Grants</a> &amp; is available to all.</p>
+					<p>Updates are posted on the <a href="https://forum.zcashcommunity.com/t/zcash-point-of-sale-project-prototype/33019/28" target="_blank">Zcash Community Forum</a>.</p>
 				</li>
 	
 				<li><h3>Why Zcash (ZEC) ?</h3>
@@ -320,9 +314,7 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				</li>
 	
 				<li><h3>Why Ycash (YEC) ?</h3>
-					<p>Ycash uses the same tech as Zcash.</p>
-					<p>Its a new project that I've helped with.</p>
-					<p>They're nice people to work with.</p>
+					<p>Ycash uses the same tech as Zcash and has the same privacy.</p>
 				</li>
 
 				<li><h3>Why Bitcoin (BTC) ?</h3>
@@ -335,7 +327,7 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 				<li><h3>How much does this cost ?</h3>
 					<p>Zatsuma is free for anyone to use.</p>
-					<p>There are no intermediaries, funds go directly to your node wallet which only you control.</p>
+					<p>There are no intermediaries, funds go directly to your wallet which only you control.</p>
 					<p>No hosting required, it uses your computer &amp; internet connection.</p>
 				</li>
 	
@@ -348,12 +340,11 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	
 				<li><h3>System requirements ?</h3>
 					<p>Server :-
-						<ul>
-							<li>Debian/Ubuntu Linux</li>
-							<li>8Gb RAM (4Gb min, but sucks!)</li>
+							<ul>
+							<li>Ubuntu Linux</li>
+							<li>8Gb RAM (5Gb min, but sucks!)</li>
 							<li>500Gb Storage (more is better!)</li>
 							<li>An old laptop works well</li>
-							<li>Patience (downloading blockchains takes time!)</li>
 						</ul>
 					<p>Client (any of the following):-
 					<ul>
@@ -370,13 +361,15 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					<ul>
 						<li>ZECwallet</li>
 						<li>zcash-cli</li>
+						<li>YECwallet</li>
+						<li>ycash-cli</li>
 						<li>bitcoin-cli</li>
 						<li>lncli</li>
 					</ul></p>
 				</li>
 	
 				<li><h3>Why is BTC Lightning not always available?</h3>
-					<p>Bitcoin Lightning payments are only possible when the sale value is :-
+					<p>Lightning payments are only possible when the sale value is :-
 					<ul>
 						<li>Less than 0.0429 BTC (lnd daemon safety limit).</li>
 						<li>Less than the maximum inbound capacity of your largest active channel.</li>
@@ -389,9 +382,9 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				</li>
 	
 				<li><h3>Where do the exchange rates come from?</h3>
-					<p>Coinlib, they provide rates for 154 fiat/crypto pairs.</p>
-					<p>To access their API you have to <a href="https://coinlib.io" target="_blank">register</a>.</p>
-					<p>Coinlib has a very cool app for tracking crypto prices &amp; portfolios.</p>
+					<p>CoinLib, they provide rates for 154 fiat/crypto pairs.</p>
+					<p>To access CoinLibs API you have to <a href="https://coinlib.io" target="_blank">register</a>.</p>
+					<p>Ycash data (YECBTC) is supplied by <a href="https://safe.trade" target="_blank">Safe.Trade</a> and converted to the fiat price using the BTCUSD price Coinlib.</p>
 				</li>
 	
 				<li><h3>How do you get a domain name for your shop?</h3>
@@ -400,11 +393,6 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				</li>
 
 				<li><h3>Credits &amp; Honourable Mentions</h3>
-					<p>For developing the code &amp; math that makes this possible :-</p>
-					<ul>
-						<li><a href="https://electriccoin.co" target="_blank">The Electric Coin Company</a></li>
-					</ul>
-
 					<p>For funding this project via <a href="https://grants.zfnd.org" target="_blank">ZF Grants</a>:-</p>
 					<ul>
 						<li>Zcash Foundation</li>
@@ -511,7 +499,7 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			<tr id="divMenuMessages"><th onclick="B_menu('Messages');">MESSAGES</th></tr>
 			<tr id="divMenuStatus"><th onclick="B_menu('Status');">SERVER STATUS</th></tr>
 			<tr id="divMenuView"><th onclick="B_menu('View');">VIEW ORDERS</th></tr>
-			<tr id="divMenuAbout"><th onclick="B_menu('About');">ABOUT ZATSUMA</th></tr>
+			<tr id="divMenuAbout"><th onclick="B_menu('About');">ABOUT</th></tr>
 			<tr id="divMenuLogout"><th onclick="B_menu('Logout');">LOGOUT</th></tr>
 		</table>
 	</div>
