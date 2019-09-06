@@ -1,7 +1,7 @@
 [Unit]
 Description=Zatsuma Timer (DuckDNS)
 Wants=zatsuma-core.service
-PartOf=zatsuma.service
+PartOf=zatsuma-core.service
 
 [Timer]
 OnBootSec=1min

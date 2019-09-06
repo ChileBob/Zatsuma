@@ -5,6 +5,7 @@ Requires=apache2.service
 After=network.target
 Wants=zatsuma-prices.timer
 Wants=zatsuma-duckdns.timer
+Wants=zatsuma-orders.timer
 PartOf=zatsuma.service
 
 [Service]

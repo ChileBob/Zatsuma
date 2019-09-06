@@ -11,9 +11,9 @@ Wants=zatsuma-btc.service
 Wants=zatsuma-lnd.service
 
 [Service]
-Type=simple
+Type=oneshot
 User=USERNAME
-ExecStart=/usr/local/bin/zatsuma/shopd
+ExecStart=/usr/local/bin/zatsuma/shopd -coinlib
 
 [Install]
 WantedBy=multi-user.target
