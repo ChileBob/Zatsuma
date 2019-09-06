@@ -8,7 +8,7 @@
 
 // CHANGE THIS TO MATCH YOUR INSTALLATION
 
-var shopAPI = 'http://zatsuma.localhost/cgi-bin/zatsuma.cgi';					// shop proxy - delete this line after installation
+var shopAPI = 'http://zatsuma.localhost/cgi-bin/zatsuma.cgi';					// shop proxy - change to match your installation 
 
 // #######################################################################################################################################################
 // DONT CHANGE ANYTHING BELOW THIS LINE
@@ -321,7 +321,6 @@ function B_menu(button) {											// Menu button
 // ******************************************************************************************************************************************************************
 //														Alert button on title bar
 function B_alert(type) {							
-	console.log('B_alert() : alert = ' + type);
 	document.getElementById('divTitleAlert').innerHTML = '';						// clear button on titlebar
 
 	if ( type == 'message') {										// users message inbox
@@ -361,8 +360,6 @@ function B_mesg(action, idx) {
 // ******************************************************************************************************************************************************************
 //														Button functions for messages
 function B_order(action, ordernumber) {							
-
-	console.log('B_order() : action=' + action + ', ordernumber = ' + ordernumber);
 
 	if (action == 'show') {											// order selected from 'My Orders' list
 		jsonCOMMAND( { req:'order_get', ordernumber: ordernumber } );				
@@ -560,7 +557,6 @@ function calculate_exch() {
 // ******************************************************************************************************************************************************************
 //
 function B_checkout(coin) {									// Checkout coin button
-	console.log('B_checkout() : coin = ' + coin);
 
 	var coinamount;
 
@@ -890,13 +886,10 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 			
 			// *************************************************************************************************************************************
 			if (typeof data.order_new != 'undefined') {						// place new order
-				console.log('jsonCOMMAND() : order_new');
 
 				cacheORDER = data.order_new;							// cache the current order 
 				timerCONFIG.seconds_reset = timerCONFIG.fast;					// faster updates
 	
-				console.log ('data.order_new.ordernumber = ' + data.order_new.ordernumber);
-
 				var fiatamount = '';
 				if (data.order_new.coin != 'CASH') {
 					fiatamount = ' = ' + Number(data.order_new.coinamount).toFixed(8) + ' ' + String(data.order_new.coin).substring(0,3);
@@ -926,8 +919,6 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 						jQuery('#divOrderQRcode').qrcode ( encodeURI(data.order_new.uri) );
 						document.getElementById('divOrderAddress').innerHTML = encodeURI(data.order_new.uri);
 						document.getElementById('E_Order_Confirmations').innerHTML = data.order_new.confirmations + ' / ' + data.order_new.conftarget;
-
-						console.log('<button class=\"bigbutton\" onclick=\"B_order(\'cancel\', \'' + cacheORDER.ordernumber + '\');\">Cancel</button>');
 						document.getElementById('E_Order_Button').innerHTML = '<button class=\"bigbutton\" onclick=\"B_order(\'cancel\', \'' + cacheORDER.ordernumber + '\');\">Cancel</button>';
 					}
 					else if (data.order_new.order_status == 1) {							// notification received but payment not confirmed
@@ -972,7 +963,6 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 			
 			// *************************************************************************************************************************************
 			if (typeof data.order_update != 'undefined') {						// update order status (accept, cancel, etc)
-				console.log('jsonCOMMAND() : order_update');
 
 				if (cacheORDER.ordernumber == data.order_update.ordernumber) {			// this is the order thats being displayed
 					// TODO: Update div
@@ -986,7 +976,6 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 			
 			// *************************************************************************************************************************************
 			if (typeof data.order_get != 'undefined') {						// retreive order & switch to orders div
-				console.log('jsonCOMMAND() : order_get');
 				cacheORDER = data.order_get;							// update cache
 
 				var fiatamount = '';								// format crypto & fiat amounts
@@ -1302,7 +1291,6 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 
 				if (data.notify.message > 0) {								// new message
 					if ((cacheNOTIFY.message > 0) && (data.notify.message > cacheNOTIFY.message) && (cacheUSER.privilege > 0) ) {	
-						console.log('jsonCOMMAND() : beep! new message');
 						var audio = new Audio('audio/notify.mp3');				// play sound
 						audio.play();
 						if (cacheDISPLAY.divname != 'Messages') {				// show alert button if we're on a different div
@@ -1314,7 +1302,6 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 
 				if (data.notify.orders > 0) {								// new order
 					if ((cacheNOTIFY.orders > 0) && (data.notify.orders > cacheNOTIFY.orders) ) {
-						console.log('jsonCOMMAND() : beep! new order');
 						var audio = new Audio('audio/notify.mp3');				// play sound (plays for notification AND confirmations)
 						audio.play();
 						if ( (cacheDISPLAY.divname != 'Orders') && (cacheDISPLAY.divname != 'Order') ) {	// not showing orders div, show the button
@@ -1330,7 +1317,6 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 
 				if (data.notify.users > 0) {								// new user login
 					if ( (cacheNOTIFY.users > 0) && (data.notify.users > cacheNOTIFY.users) && (cacheUSER.privilege > 0)  ) {
-						console.log('jsonCOMMAND() : beep! user login');
 						var audio = new Audio('audio/notify.mp3');				// play sound
 						audio.play();
 						if (cacheDISPLAY.divname != 'Users') {					// show alert button if we're on a different div
@@ -1345,7 +1331,7 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 	
 			// *************************************************************************************************************************************
 			if (data.error == 'down') {								// no connection to shopd
-				console.log('jsonCOMMAND() : no connection to shopd!');
+				console.log('no connection to shopd!');
 				// TODO: Show error page
 			}
 			
@@ -1375,8 +1361,6 @@ function jsonCOMMAND(command) {									// Reqeust data from shopd
 function D_showdiv(divname) {											// Show selected div
 
 	if (divname != cacheDISPLAY.divname) {										// only do this if a new div has been selected, avoids flicker
-		console.log('D_showdiv() : ' + divname);
-
 		cacheDISPLAY.divname = divname;										// cache divname
 															// div names
 		var divList = new Array('divLogin', 'divError', 'divCheckout', 'divWallet', 'divAbout', 'divUsers', 'divOrders', 'divOrder', 'divStatus', 'divView', 'divMessages', 'divSplash');
