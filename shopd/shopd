@@ -369,7 +369,8 @@ while(1) { 													# MAIN LOOP
 
 		$notify->{'message'} = 0;									# get timestamp of last message for this user (or all users)
 		if ($json->{'user'}->{'privilege'} > 0) {
-			my $db_mesg = $dbh->prepare("select max(unix_timestamp(mesg.created)) from mesg left join user as user_rx on user_rx.idx = mesg.user_rx left join user as user_tx on user_tx.idx = mesg.user_tx where (user_rx.idx = $json->{'user'}->{'idx'} or mesg.user_rx = 0) and mesg.status > -1;");
+			my $db_mesg = $dbh->prepare("select max(unix_timestamp(mesg.created)) from mesg left join user as user_rx on user_rx.idx = mesg.user_rx left join user as user_tx on user_tx.idx = mesg.user_tx where (user_rx.idx = $json->{'user'}->{'idx'} or mesg.user_rx = 0) and mesg.status > -1 and hex(mesg.content) <> 'C383C2B6';");
+
 			my $db_mesg_hits = $db_mesg->execute();
 			if ($db_mesg_hits > 0) {
 				my @db_mesg = $db_mesg->fetchrow_array();
@@ -478,12 +479,12 @@ while(1) { 													# MAIN LOOP
 
 				if ($json->{'user'}->{'privilege'} > 0) {
 
-				my $db_query = $dbh->prepare("select mesg.idx, mesg.status, mesg.type, unix_timestamp(mesg.created), mesg.user_tx, user_tx.username, mesg.user_rx, user_rx.username, mesg.content from mesg left join user as user_rx on user_rx.idx = mesg.user_rx left join user as user_tx on user_tx.idx = mesg.user_tx where (user_rx.idx = $json->{'user'}->{'idx'} or mesg.user_rx = 0) and mesg.status > -1 order by mesg.idx desc limit 10;");
+				my $db_query = $dbh->prepare("select mesg.idx, mesg.status, mesg.type, unix_timestamp(mesg.created), mesg.user_tx, user_tx.username, mesg.user_rx, user_rx.username, mesg.content from mesg left join user as user_rx on user_rx.idx = mesg.user_rx left join user as user_tx on user_tx.idx = mesg.user_tx where (user_rx.idx = $json->{'user'}->{'idx'} or mesg.user_rx = 0) and mesg.status > -1 and hex(mesg.content) <> 'C383C2B6' order by mesg.idx desc limit 10;");
 				$json->{'mesg_inbox'}->{'mesg_count'} = $db_query->execute();
 				$json->{'mesg_inbox'}->{'inbox'} = $db_query->fetchall_arrayref();
 
 														# get timestamp of last message for this user
-				my $db_mesg = $dbh->prepare("select max(unix_timestamp(mesg.created)) from mesg left join user as user_rx on user_rx.idx = mesg.user_rx left join user as user_tx on user_tx.idx = mesg.user_tx where (user_rx.idx = $json->{'user'}->{'idx'} or mesg.user_rx = 0) and mesg.status > -1;");
+				my $db_mesg = $dbh->prepare("select max(unix_timestamp(mesg.created)) from mesg left join user as user_rx on user_rx.idx = mesg.user_rx left join user as user_tx on user_tx.idx = mesg.user_tx where (user_rx.idx = $json->{'user'}->{'idx'} or mesg.user_rx = 0) and mesg.status > -1 and hex(mesg.content) <> 'C383C2B6';");
 				my $db_mesg_hits = $db_mesg->execute();
 				if ($db_mesg_hits > 0) {
 					my @db_mesg = $db_mesg->fetchrow_array();
