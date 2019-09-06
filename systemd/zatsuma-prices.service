@@ -1,8 +1,8 @@
 [Unit]
 Description="Zatsuma Exchange Rate"
 Wants=zatsuma-prices.timer
-Wants=zatsuma.service
-PartOf=zatsuma-all.service
+Wants=zatsuma-core.service
+PartOf=zatsuma.service
 
 [Service]
 Type=oneshot

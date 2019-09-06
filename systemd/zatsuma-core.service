@@ -5,10 +5,7 @@ Requires=apache2.service
 After=network.target
 Wants=zatsuma-prices.timer
 Wants=zatsuma-duckdns.timer
-Wants=zatsuma-zec.service
-Wants=zatsuma-yec.service
-Wants=zatsuma-btc.service
-Wants=zatsuma-lnd.service
+PartOf=zatsuma.service
 
 [Service]
 Type=simple

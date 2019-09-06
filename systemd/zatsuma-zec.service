@@ -2,7 +2,8 @@
 Description=Zatsuma (Zcash)
 StartLimitIntervalSec=0
 Wants=zatsuma-zcashd.service
-Wants=zatsuma.service
+Wants=zatsuma-core.service
+PartOf=zatsuma.service
 
 [Service]
 Type=simple

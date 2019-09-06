@@ -183,8 +183,10 @@ if ($#ARGV >= 0) {
 		my $db_update = $dbh->do("insert into user (username, password, privilege, session) values ($db_newusername, PASSWORD($db_value), 10, PASSWORD($db_newsession));");
 		print "User '$newusername' created, password '$newpassword'\n";
 	}
-	
-	&order_process();											# update any pending orders
+
+	elsif ($ARGV[0] eq '-orders') {										# process pending orders
+		&order_process();											# update any pending orders
+	}
 
 	close($logfile);											# gets closed anyway, but its nice to be tidy
 	exit;													# time to go, not started as a daemon

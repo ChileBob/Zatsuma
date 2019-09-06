@@ -1,0 +1,14 @@
+[Unit]
+Description="Zatsuma Order Processing"
+Wants=zatsuma-orders.timer
+Wants=zatsuma-core.service
+PartOf=zatsuma.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/zatsuma/shopd -orders
+User=USERNAME
+
+[Install]
+WantedBy=zatsuma-orders.target
+

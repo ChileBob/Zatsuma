@@ -1,12 +1,9 @@
 [Unit]
 Description=Zatsuma Shop Daemon (Bitcoin Lightning Network)
-After=zatsuma-shopd.service
 StartLimitIntervalSec=0
 Wants=zatsuma-bitcoind.service
-Wants=zatsuma-lnd.service
-Wants=zatsuma.service
-PartOf=zatsuma-all.service
-PartOf=zatsuma-btc.service
+Wants=zatsuma-core.service
+PartOf=zatsuma.service
 
 [Service]
 Type=simple
