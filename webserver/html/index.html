@@ -153,14 +153,6 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 			<div id="divCheckoutCoin"> 
 
-				<div id="divCheckoutZECT"  class="CheckoutCoin">
-					<table>
-						<tr><td id="E_Checkout_Coin_ZECT"><img src="./images/zect-80x80-disabled.png" width="80" height="80" onclick="B_checkout('ZECT');"></td></tr>
-						<tr><td>ZEC Transparent</td></tr>
-						<tr><td>&nbsp;</td></tr>
-					</table>
-				</div>
-
 				<div id="divCheckoutZECZ"  class="CheckoutCoin">
 					<table>
 						<tr><td id="E_Checkout_Coin_ZECZ"><img src="./images/zecz-80x80-disabled.png" width="80" height="80" onclick="B_checkout('ZECZ');"></td></tr>
@@ -169,10 +161,10 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					</table>
 				</div>
 
-				<div id="divCheckoutYECS"  class="CheckoutCoin">
+				<div id="divCheckoutCASH"   class="CheckoutCoin">
 					<table>
-						<tr><td id="E_Checkout_Coin_YECS"><img src="./images/yecs-80x80-disabled.png" width="80" height="80" onclick="B_checkout('YECS');"></td></tr>
-						<tr><td>YEC Transparent</td></tr>
+						<tr><td id="E_Checkout_Coin_CASH"><img src="./images/cash-80x80-disabled.png" width="80" height="80" onclick="B_checkout('CASH');"></td></tr>
+						<tr><td id="E_checkoutFIAT_coin"></td></tr>
 						<tr><td>&nbsp;</td></tr>
 					</table>
 				</div>
@@ -185,6 +177,14 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					</table>
 				</div>
 
+
+				<div id="divCheckoutZECT"  class="CheckoutCoin">
+					<table>
+						<tr><td id="E_Checkout_Coin_ZECT"><img src="./images/zect-80x80-disabled.png" width="80" height="80" onclick="B_checkout('ZECT');"></td></tr>
+						<tr><td>ZEC</td></tr>
+						<tr><td>&nbsp;</td></tr>
+					</table>
+				</div>
 
 				<div id="divCheckoutBTCLN" class="CheckoutCoin">
 					<table>
@@ -202,10 +202,10 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					</table>
 				</div>
 
-				<div id="divCheckoutCASH"   class="CheckoutCoin">
+				<div id="divCheckoutYECS"  class="CheckoutCoin">
 					<table>
-						<tr><td id="E_Checkout_Coin_CASH"><img src="./images/cash-80x80-disabled.png" width="80" height="80" onclick="B_checkout('CASH');"></td></tr>
-						<tr><td id="E_checkoutFIAT_coin"></td></tr>
+						<tr><td id="E_Checkout_Coin_YECS"><img src="./images/yecs-80x80-disabled.png" width="80" height="80" onclick="B_checkout('YECS');"></td></tr>
+						<tr><td>YEC</td></tr>
 						<tr><td>&nbsp;</td></tr>
 					</table>
 				</div>
@@ -220,14 +220,6 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		</div>
 		<div id="divWalletCoin">
 
-			<div id="divWalletZECT"  class="WalletCoin">
-				<table>
-					<tr><td><img src="./images/zect-80x80.png" width="80" height="80" onclick="B_wallet('ZECT');"></td></tr>
-					<tr><td id="E_walletZECTamount">0.00000000 ZEC</td></tr>
-					<tr><td id="E_walletZECTfiat">0.00 USD</td></tr>
-				</table>
-			</div>
-
 			<div id="divWalletZECZ"  class="WalletCoin">
 				<table>
 					<tr><td><img src="./images/zecz-80x80.png" width="80" height="80" onclick="B_wallet('ZECZ');"></td></tr>
@@ -236,11 +228,11 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				</table>
 			</div>
 
-			<div id="divWalletYECS"  class="WalletCoin">
+			<div id="divWalletCASH"   class="WalletCoin">
 				<table>
-					<tr><td><img src="./images/yecs-80x80.png" width="80" height="80" onclick="B_wallet('YECS');"></td></tr>
-					<tr><td id="E_walletYECSamount">0.00000000 YEC</td></tr>
-					<tr><td id="E_walletYECSfiat">0.00 USD</td></tr>
+					<tr><td><img src="./images/cash-80x80.png"      width="80" height="80" onclick="B_wallet('CASH');"></td></tr>
+					<tr><td id="E_walletCASHamount">0.00000000 ZEC</td></tr>
+					<tr><td id="E_walletCASHfiat">0.00 USD</td></tr>
 				</table>
 			</div>
 
@@ -252,6 +244,14 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				</table>
 			</div>
 
+
+			<div id="divWalletZECT"  class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/zect-80x80.png" width="80" height="80" onclick="B_wallet('ZECT');"></td></tr>
+					<tr><td id="E_walletZECTamount">0.00000000 ZEC</td></tr>
+					<tr><td id="E_walletZECTfiat">0.00 USD</td></tr>
+				</table>
+			</div>
 
 			<div id="divWalletBTCLN" class="WalletCoin">
 				<table>
@@ -269,11 +269,11 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				</table>
 			</div>
 
-			<div id="divWalletCASH"   class="WalletCoin">
+			<div id="divWalletYECS"  class="WalletCoin">
 				<table>
-					<tr><td><img src="./images/cash-80x80.png"      width="80" height="80" onclick="B_wallet('CASH');"></td></tr>
-					<tr><td id="E_walletCASHamount">0.00000000 ZEC</td></tr>
-					<tr><td id="E_walletCASHfiat">0.00 USD</td></tr>
+					<tr><td><img src="./images/yecs-80x80.png" width="80" height="80" onclick="B_wallet('YECS');"></td></tr>
+					<tr><td id="E_walletYECSamount">0.00000000 YEC</td></tr>
+					<tr><td id="E_walletYECSfiat">0.00 USD</td></tr>
 				</table>
 			</div>
 
