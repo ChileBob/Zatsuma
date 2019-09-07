@@ -1,12 +1,10 @@
 [Unit]
-Description=Zatsuma Shop Daemon (Bitcoin Lightning Network)
-StartLimitIntervalSec=0
-Wants=zatsuma-bitcoind.service
-Wants=zatsuma-core.service
+Description=Zatsuma Lightning Node (lnd)
 PartOf=zatsuma.service
 
 [Service]
-Type=simple
+Type=exec
 User=USERNAME
-ExecStart=/usr/local/bin/zatsuma/shopd-btcln
+ExecStart=/home/USERNAME/gocode/bin/lnd
+ExecStop=/home/USERNAME/gocode/bin/lncli stop
 

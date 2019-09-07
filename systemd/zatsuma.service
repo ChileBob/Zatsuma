@@ -8,7 +8,7 @@ Wants=zatsuma-duckdns.timer
 Wants=zatsuma-zec.service
 Wants=zatsuma-yec.service
 Wants=zatsuma-btc.service
-Wants=zatsuma-lnd.service
+Wants=zatsuma-btcln.service
 
 [Service]
 Type=oneshot
