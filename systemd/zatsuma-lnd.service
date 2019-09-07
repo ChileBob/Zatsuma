@@ -1,6 +1,7 @@
 [Unit]
 Description=Zatsuma Lightning Node (lnd)
 PartOf=zatsuma.service
+PartOf=zatsuma-btcln.service
 
 [Service]
 Type=exec
