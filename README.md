@@ -28,7 +28,7 @@ https://forum.zcashcommunity.com/zcash-point-of-sale-prototype-funded/
 
 Here's what the checkout looks like :-
 
-![alt text](https://raw.githubusercontent.com/ChileBob/Zatsuma/master/screenshots/checkout.png "Zatsuma Checkout")
+![alt text](https://github.com/ChileBob/Zatsuma/blob/master/screenshots/checkout-0.0.7-dev.png "Zatsuma Checkout")
 
 # System Requirements
 
