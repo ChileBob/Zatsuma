@@ -7,7 +7,7 @@ if [ $EUID -ne "0" ]; then
 fi
 
 clear
-echo -e "Zatsuma Install-O-Matic for Ubuntu Linux"
+echo -e "Zatsuma Install-O-Matic for Ubuntu Linux : (Version 0.0.7-dev)"
 
 # collect config information
 echo -e "\nEnter a name for your shop, this should be 15 characters or less"
@@ -41,10 +41,6 @@ fi
 
 start_zatsuma="none"
 
-echo -e "\nIf you want a zatsuma to start automatically, type auto :-"
-
-read -p 'Zatsuma Shop Daemon       : ' start_zatsuma
-
 echo -e "\nChoose a password for the zatsuma database (least 10 chars and must contain letters, capitals, numbers and symbols :-"
 read -p 'MYSQL zatsuma password    : ' mysql_zatsuma
 
@@ -58,7 +54,6 @@ do
 	read -p 'CoinLib API key           : ' coinlib_api
 	COINLIB="`wget -qO - https://coinlib.io/api/v1/global?key=$coinlib_api&pref=USD`"
 done
-
 
 echo -e "\nEnter your DuckDNS domain and token if you want your Zatsuma to be publicly available (register on https://duckdns.org) :-"
 read -p 'DuckDNS domain            : ' duckdns_domain
@@ -93,7 +88,7 @@ then
 	while [ -z "$TEST" ]
 	do
 		echo "WARNING: You must open and forward ports 80 & 443 on your router to this machine."
-		echo "WARNING: Please do that now and then :-"
+		echo "WARNING: Please do that now, then :-"
 		echo "WARNING: - for public install, type public"
 		echo "WARNING: - for local install, type local"
    	        read -p 'WARNING: Type of install : ' query
@@ -110,7 +105,7 @@ fi
 
 if [ -z "$duckdns_domain" ]
 then
-	echo "Installation type         : LOCAL  - zatsuma will be at http://127.0.0.1"
+	echo "Installation type         : LOCAL  - zatsuma will be at http://zatsuma.localhost"
 else
 	echo "Installation type         : PUBLIC - zatsuma will be at https://$duckdns_domain.duckdns.org"
 fi
@@ -200,6 +195,14 @@ echo "...installing mysql"
 apt-get -qq install mysql-server libmysqlclient-dev
 mysql_secure_installation --use-default	
 
+echo "...creating empty zatsuma database, please enter your MYSQL root password :-"
+
+# Note: Really needs to archive & drop any existing database
+echo -e "create database zatsuma;\nGRANT ALL PRIVILEGES ON zatsuma.* TO 'zatsuma'@'localhost' IDENTIFIED BY '$mysql_zatsuma';\nuse zatsuma;" >/tmp/zatsuma.sql
+cat shopd/zatsuma.sql >>/tmp/zatsuma.sql
+mysql -u root -p < /tmp/zatsuma.sql
+
+
 echo "...installing apache2 webserver"
 apt-get -qq install apache2
 
@@ -208,15 +211,15 @@ apt-get -qq install perl libdbi-perl libdbd-mysql-perl
 
 echo "...installing perl modules"
 cpan install CPAN
-cpan install CGI CGI::Cookie IO::Socket::INET JSON JSON::RPC::Client Encode DBI DBD::mysql LWP::UserAgent HTTP::Request String::HexConvert HTML::Restrict HTML::Entities Data::Dumper List::Util
+cpan install CGI CGI::Cookie IO::Socket::INET JSON JSON::RPC::Client Encode DBI DBD::mysql LWP::UserAgent HTTP::Request String::HexConvert HTML::Restrict HTML::Entities Data::Dumper List::Util Sub::Quote Moo Module::Implementation
 
 mkdir -p /usr/local/bin/zatsuma 2>/dev/null
 
 echo "...installing zatsuma daemons"
 cp shopd/*.txt /home/$user_zatsuma/.zatsuma
-cp shopd/shopd shopd/*.txt /usr/local/bin/zatsuma
+cp shopd/shopd /usr/local/bin/zatsuma
 cp shopd-zec/shopd-zec /usr/local/bin/zatsuma
-cp shopd-zec/shopd-yec /usr/local/bin/zatsuma
+cp shopd-yec/shopd-yec /usr/local/bin/zatsuma
 cp shopd-btc/shopd-btc /usr/local/bin/zatsuma
 cp shopd-btcln/shopd-btcln /usr/local/bin/zatsuma
 chmod +x /usr/local/bin/zatsuma/*
@@ -226,56 +229,44 @@ grep -v "REPLACE" shopd/shopd.conf >/home/$user_zatsuma/.zatsuma/shopd.conf
 echo -e "\n\n# CONFIGURED BY SETUP SCRIPT" >>/home/$user_zatsuma/.zatsuma/shopd.conf
 echo -e "shopname = \"$zatsuma_name\"\ncoinlib_api = \"$coinlib_api\"\nduckdns_domain = \"$duckdns_domain\"\nduckdns_token = \"$duckdns_token\"\ndbpassword = \"$mysql_zatsuma\"" >>/home/$user_zatsuma/.zatsuma/shopd.conf
 
-echo "...generating systemd for zatsuma"
-cp systemd/zatsuma.service /etc/systemd/system
+echo "...generating systemd for zatsuma core services"
+cp systemd/* /etc/systemd/system
+
 sed -i "s/USERNAME/$user_zatsuma/g" /etc/systemd/system/zatsuma.service
-
-cp systemd/zatsuma-prices.timer /etc/systemd/system
-cp systemd/zatsuma-prices.service /etc/systemd/system
+sed -i "s/USERNAME/$user_zatsuma/g" /etc/systemd/system/zatsuma-core.service
 sed -i "s/USERNAME/$user_zatsuma/g" /etc/systemd/system/zatsuma-prices.service
+sed -i "s/USERNAME/$user_zatsuma/g" /etc/systemd/system/zatsuma-orders.service
+sed -i "s/USERNAME/$user_zatsuma/g" /etc/systemd/system/zatsuma-duckdns.service
 
-if [ ! -z "$duckdns_domain" ]
-then
-	cp systemd/zatsuma-duckdns.timer /etc/systemd/system
-	cp systemd/zatsuma-duckdns.service /etc/systemd/system
-	sed -i "s/USERNAME/$user_zatsuma/g" /etc/systemd/system/zatsuma-duckdns.service
-fi
+
 
 if [ ! -z "$user_zec" ]					# generate config dirs & files
 then
-	echo "...installing zatsuma shop daemon for zcash (shopd-zec)"
+	echo "...installing zatsuma for zcash (zec)"
 	cp shopd-zec/shopd-zec.conf /home/$user_zec/.zatsuma
 	chown -R $user_zec.$user_zec /home/$user_zec/.zatsuma
 
-	echo "...generating systemd zatsuma-shopd-zec"
-	cp systemd/zatsuma-shopd-zec.service /etc/systemd/system
-	sed -i "s/USERNAME/$user_zec/g" /etc/systemd/system/zatsuma-shopd-zec.service
-
-	echo "...generating systemd zatsuma-zcashd"
-	cp systemd/zatsuma-zcashd.service /etc/systemd/system
+	echo "...generating systemd"
+	sed -i "s/USERNAME/$user_zec/g" /etc/systemd/system/zatsuma-zec.service
 	sed -i "s/USERNAME/$user_zec/g" /etc/systemd/system/zatsuma-zcashd.service
 else
 	echo "...removing zec startup from /etc/systemd/system/zatsuma.service"
-	grep -v shopd-zec /etc/systemd/system/zatsuma.service >/tmp/zatsuma.service
+	grep -v zatsuma-zec.service /etc/systemd/system/zatsuma.service >/tmp/zatsuma.service
 	mv /tmp/zatsuma.service /etc/systemd/system
 fi
 
 if [ ! -z "$user_yec" ]
 then
 	echo "...installing zatsuma shop daemon for ycash (shopd-yec)"
-	cp shopd-btc/shopd-yec.conf /home/$user_yec/.zatsuma
+	cp shopd-yec/shopd-yec.conf /home/$user_yec/.zatsuma
 	chown -R $user_yec.$user_yec /home/$user_yec/.zatsuma
 
-	echo "...generating systemd zatsuma-shopd-yec"
-	cp systemd/zatsuma-shopd-yec.service /etc/systemd/system
-	sed -i "s/USERNAME/$user_yec/g" /etc/systemd/system/zatsuma-shopd-yec.service
-
-	echo "...generating systemd zatsuma-ycashd"
-	cp systemd/zatsuma-ycashd.service /etc/systemd/system
+	echo "...generating systemd"
+	sed -i "s/USERNAME/$user_yec/g" /etc/systemd/system/zatsuma-yec.service
 	sed -i "s/USERNAME/$user_yec/g" /etc/systemd/system/zatsuma-ycashd.service
 else
 	echo "...removing yec startup from /etc/systemd/system/zatsuma.service"
-	grep -v shopd-yec /etc/systemd/system/zatsuma.service >/tmp/zatsuma.service
+	grep -v zatsuma-yec.service /etc/systemd/system/zatsuma.service >/tmp/zatsuma.service
 	mv /tmp/zatsuma.service /etc/systemd/system
 fi
 
@@ -285,16 +276,12 @@ then
 	cp shopd-btc/shopd-btc.conf /home/$user_btc/.zatsuma
 	chown -R $user_btc.$user_btc /home/$user_btc/.zatsuma
 
-	echo "...generating systemd zatsuma-shopd-btc"
-	cp systemd/zatsuma-shopd-btc.service /etc/systemd/system
-	sed -i "s/USERNAME/$user_btc/g" /etc/systemd/system/zatsuma-shopd-btc.service
-
-	echo "...generating systemd zatsuma-bitcoind"
-	cp systemd/zatsuma-bitcoind.service /etc/systemd/system
+	echo "...generating systemd"
+	sed -i "s/USERNAME/$user_btc/g" /etc/systemd/system/zatsuma-btc.service
 	sed -i "s/USERNAME/$user_btc/g" /etc/systemd/system/zatsuma-bitcoind.service
 else
 	echo "...removing btc & btcln startups from /etc/systemd/system/zatsuma.service"
-	grep -v shopd-btc /etc/systemd/system/zatsuma.service >/tmp/zatsuma.service
+	grep -v zatsuma-btc /etc/systemd/system/zatsuma.service >/tmp/zatsuma.service		# note: removes BTC & BTC/LN
 	mv /tmp/zatsuma.service /etc/systemd/system
 fi
 
@@ -302,40 +289,26 @@ if [ ! -z "$user_btcln" ]
 then
 	echo "...installing zatsuma shop daemon for bitcoin lightning (shopd-btcln)"
 	cp shopd-btcln/shopd-btcln.conf /home/$user_btcln/.zatsuma
+	echo "client = \"/home/$user_btcln/gocode/bin/lncli\"" >> /home/$user_btcln/.zatsuma/shopd-btcln.conf
 	chown -R $user_btcln.$user_btcln /home/$user_btcln/.zatsuma
 
-	echo "...generating systemd zatsuma-shopd-btcln"
-	cp systemd/zatsuma-shopd-btcln.service /etc/systemd/system
-	sed -i "s/USERNAME/$user_btc/g" /etc/systemd/system/zatsuma-shopd-btcln.service
-
-	echo "...generating systemd zatsuma-lnd"
-	cp systemd/zatsuma-bitcoind.service /etc/systemd/system
+	echo "...generating systemd"
+	sed -i "s/USERNAME/$user_btc/g" /etc/systemd/system/zatsuma-btcln.service
 	sed -i "s/USERNAME/$user_btc/g" /etc/systemd/system/zatsuma-lnd.service
 else
 	echo "...removing btcln startup from /etc/systemd/system/zatsuma.service"
-	grep -v shopd-btcln /etc/systemd/system/zatsuma.service >/tmp/zatsuma.service
+	grep -v zatsuma-btcln.service /etc/systemd/system/zatsuma.service >/tmp/zatsuma.service
 	mv /tmp/zatsuma.service /etc/systemd/system
 fi
 
 chmod +x /usr/local/bin/zatsuma/*			# make daemons executable
 
-if [ "$start_zatsuma" == "auto" ] 			# auto/manual start for zatsuma daemon
-then
-	echo "TODO: Add [Install] to zatsuma.service systemd config"
-fi 
-
-
-echo "...creating empty zatsuma database, please enter your MYSQL root password :-"
-
-# Note: Really needs to archive & drop any existing database
-echo -e "create database zatsuma;\nGRANT ALL PRIVILEGES ON zatsuma.* TO 'zatsuma'@'localhost' IDENTIFIED BY '$mysql_zatsuma';\nuse zatsuma;" >/tmp/zatsuma.sql
-cat shopd/zatsuma.sql >>/tmp/zatsuma.sql
-mysql -u root -p < /tmp/zatsuma.sql
 
 echo "...configuring webserver"
 sudo a2dissite 000-default.conf
 cp webserver/zatsuma.conf /etc/apache2/sites-available
-cp -r webserver/* /var/www	
+mkdir -p /var/www/zatsuma 2>/dev/null
+cp -r webserver/* /var/www/zatsuma
 
 if [ -z "$duckdns_domain" ]
 then
@@ -346,7 +319,7 @@ then
 	then
 		echo "...zatsuma.localhost already in /etc/hosts"
 	else
-		echo "...adding zatstuma.localhost to /etc/hosts"
+		echo "...adding zatstuma.localhost alias for 127.0.0.1 to /etc/hosts"
 		echo "$LOCALHOST zatsuma.localhost" >/tmp/zatsuma-hosts
 		grep -v 127.0.0.1 /etc/hosts >>/tmp/zatsuma-hosts
 		mv /tmp/zatsuma-hosts /etc/hosts
@@ -354,12 +327,12 @@ then
 	fi
 else
 	echo "...updating website config for remote access to http://$duckdns_domain.duckdns.org"
-	sed -i "s/\#ServerName REPLACE/ServerName ${duckdns_domain}/g" /etc/apache2/sites-available/zatsuma.conf
+	sed -i "s/zatsuma.localhost/${duckdns_domain}.duckdns.org/g" /etc/apache2/sites-available/zatsuma.conf
 	sed -i "s/http:\/zatsuma.localhost/https:\/\/${duckdns_domain}.duckdns.org/g" /var/www/html/js/zatsuma.js
 fi
 sudo a2ensite zatsuma.conf
 
-chmod +x /var/www/cgi-bin/zatsuma.cgi
+chmod +x /var/www/zatsuma/cgi-bin/zatsuma.cgi
 
 echo "...enabling webserver modules"
 a2enmod cgi
@@ -493,7 +466,14 @@ then
 	echo -e "...moving binaries to /usr/local/bin"
 	mv ycash-v2.0.6.1/y* /usr/local/bin
 
+	# tidy up
+	rm linux-binaries*.gz
+	rm -rf ycash*
+
+	mkdir /home/$user_yec/.ycash 2>/dev/null
+
 	touch /home/$user_yec/.ycash/ycash.conf					# setup zcash config
+
 	if [ -d "/home/$user_yec/.ycash/ycash.conf" ]
 	then
 		echo "...checking/updating ycash.conf settings"
@@ -575,7 +555,7 @@ then
 		rm -rf bitcoin-0.18.0*
 	fi
 
-	if [ -d "/home/$user_btc/.bitcoin" ]
+	if [ -d "/home/$user_btc/.bitcoin/bitcoin.conf" ]
 	then
 		echo "...checking/updating bitcoin.conf settings"
 
@@ -652,7 +632,7 @@ then
 			echo "...zmqpubrawblock already set"
 		fi
 
-		if [ ! "`grep zmqpubrawblock /home/$user_btc/.bitcoin/bitcoin.conf`" ]
+		if [ ! "`grep zmqpubrawtx /home/$user_btc/.bitcoin/bitcoin.conf`" ]
 		then
 			echo "...adding zmqpubrawtx"
 			echo -e "zmqpubrawtx=tcp://127.0.0.1:18502" >>/home/$user_btc/.bitcoin/bitcoin.conf
@@ -728,7 +708,7 @@ then
 			echo "client=\"/home/$user_btcln/gocode/bin/lncli\"" >> /home/$user_btcln/.zatsuma/shopd-btcln.conf
 	
 			# tidy up
-			rm go1.12.3.linux-amd64.tar.gz*
+			rm go*.gz
 	
 			# final message
 			echo -e "...bitcoin lightning (lnd) has been installed\n"
@@ -768,17 +748,15 @@ echo "/usr/local/bin/zatsuma/shopd"
 
 echo -e "\nTo add a user to your zatsuma, type :-\n";
 echo "su - $user_zatsuma"
-echo "/usr/local/bin/zatsuma/shopd --adduser USERNAME		(random password is generated automatically)"
+echo "/usr/local/bin/zatsuma/shopd --adduser USERNAME		(A random password is generated automatically)"
 
-echo -e "\nFoz Zatsuma to work properly please ensure the following :-"
-echo -e "\n- all coin nodes must be running and synchronized with their networks :-"
-echo "  - zcashd"
-echo "  - ycashd"
-echo "  - bitcoind"
-echo "  - lnd"
-echo -e "\n- the zatsuma shop and node daemons must be running :-"
-echo "  - shopd"
-echo "  - shopd-zec"
-echo "  - shopd-yec"
-echo "  - shopd-btc"
-echo "  - shopd-btcln"
+echo -e "To start zatsuma automatically when your machine starts, type :-"
+echo "sudo systemctl enable zatsuma"
+
+echo -e "To start zatsuma and ALL coin nodes, type :-"
+echo "sudo systemctl start zatsuma"
+
+echo -e "To start zatsuma for a specific coin, type :-"
+echo "sudo systemctl start zatsuma-zec"
+
+
