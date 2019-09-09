@@ -1,0 +1,13 @@
+[Unit]
+Description="Zatsuma DuckDNS (Dynamic IP)"
+Wants=zatsuma-core.service
+Wants=zatsuma-duckdns.timer
+PartOf=zatsuma.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/zatsuma/shopd -duckdns
+User=USERNAME
+
+[Install]
+WantedBy=zatsuma-duckdns.target

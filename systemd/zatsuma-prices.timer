@@ -1,0 +1,12 @@
+[Unit]
+Description=Zatsuma Timer (Exchange Rates)
+PartOf=zatsuma-core.service
+Wants=zatsuma-core.service
+
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=1min
+Unit=zatsuma-prices.service
+
+[Install]
+WantedBy=network.target

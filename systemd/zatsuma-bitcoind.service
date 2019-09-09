@@ -1,0 +1,10 @@
+[Unit]
+Description=Zatsuma Zcash Node (bitcoind)
+PartOf=zatsuma-btc.service
+
+[Service]
+Type=forking
+User=USERNAME
+ExecStart=/usr/local/bin/bitcoind -daemon
+ExecStop=/usr/local/bin/bitcoin-cli stop
+

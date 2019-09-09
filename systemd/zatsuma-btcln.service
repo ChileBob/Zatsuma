@@ -1,0 +1,12 @@
+[Unit]
+Description=Zatsuma Shop Daemon (Bitcoin Lightning Network)
+StartLimitIntervalSec=0
+Wants=zatsuma-bitcoind.service
+Wants=zatsuma-lnd.service
+PartOf=zatsuma.service
+
+[Service]
+Type=simple
+User=USERNAME
+ExecStart=/usr/local/bin/zatsuma/shopd-btcln
+

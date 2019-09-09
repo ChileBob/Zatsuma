@@ -1,0 +1,12 @@
+[Unit]
+Description=Zatsuma (Zcash)
+StartLimitIntervalSec=0
+Wants=zatsuma-zcashd.service
+Wants=zatsuma-core.service
+PartOf=zatsuma.service
+
+[Service]
+Type=simple
+User=USERNAME
+ExecStart=/usr/local/bin/zatsuma/shopd-zec
+

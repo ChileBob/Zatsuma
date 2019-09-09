@@ -1,0 +1,12 @@
+[Unit]
+Description=Zatsuma Shop Daemon (Ycash)
+StartLimitIntervalSec=0
+Wants=zatsuma-ycashd.service
+Wants=zatsuma-core.service
+PartOf=zatsuma.service
+
+[Service]
+Type=simple
+User=USERNAME
+ExecStart=/usr/local/bin/zatsuma/shopd-yec
+

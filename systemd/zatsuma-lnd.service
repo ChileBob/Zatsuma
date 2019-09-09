@@ -1,0 +1,11 @@
+[Unit]
+Description=Zatsuma Lightning Node (lnd)
+PartOf=zatsuma.service
+PartOf=zatsuma-btcln.service
+
+[Service]
+Type=exec
+User=USERNAME
+ExecStart=/home/USERNAME/gocode/bin/lnd
+ExecStop=/home/USERNAME/gocode/bin/lncli stop
+

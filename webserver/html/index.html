@@ -4,7 +4,7 @@
 <head>
 <title>Zatsuma</title>
 <meta charset="utf-8">
-<meta name="description" content="Zatsuma : Zcash/Bitcoin Point-Of-Sale : ChileBob">
+<meta name="description" content="Zcash/Bitcoin/Lightning/Ycash Crypto Point-Of-Sale">
 <meta name="robots" content="index, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -108,6 +108,11 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 						<th width="20%" id="E_checkoutFIAT"></th>
 						<td width="40%" id="E_checkoutBTCamount">0.00000000</br>BTC</td>
 					</tr>
+					<tr>
+						<td width="40%" id="E_checkoutYECamount">0.00000000</br>YEC</td>
+						<th width="20%" id="E_checkoutCENTRE"></th>
+						<td width="40%" id="E_checkoutRIGHT"></td>
+					</tr>
 				</table>
 			</div>
 
@@ -148,25 +153,42 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 			<div id="divCheckoutCoin"> 
 
-				<div id="divCheckoutZECT"  class="CheckoutCoin">
+				<div id="divCheckoutZECZ"  class="CheckoutCoin">
 					<table>
-						<tr><td id="E_Checkout_Coin_ZECT"><img src="./images/zect-80x80.png" width="80" height="80" onclick="B_checkout('ZECT');"></td></tr>
-						<tr><td>ZEC Transparent</td></tr>
+						<tr><td id="E_Checkout_Coin_ZECZ"><img src="./images/zecz-80x80-disabled.png" width="80" height="80" onclick="B_checkout('ZECZ');"></td></tr>
+						<tr><td>ZEC Shielded</td></tr>
 						<tr><td>&nbsp;</td></tr>
 					</table>
 				</div>
 
-				<div id="divCheckoutZECZ"  class="CheckoutCoin">
+				<div id="divCheckoutCASH"   class="CheckoutCoin">
 					<table>
-						<tr><td id="E_Checkout_Coin_ZECZ"><img src="./images/zecz-80x80.png" width="80" height="80" onclick="B_checkout('ZECZ');"></td></tr>
-						<tr><td>ZEC Shielded</td></tr>
+						<tr><td id="E_Checkout_Coin_CASH"><img src="./images/cash-80x80-disabled.png" width="80" height="80" onclick="B_checkout('CASH');"></td></tr>
+						<tr><td id="E_checkoutFIAT_coin"></td></tr>
+						<tr><td>&nbsp;</td></tr>
+					</table>
+				</div>
+
+				<div id="divCheckoutYECY"  class="CheckoutCoin">
+					<table>
+						<tr><td id="E_Checkout_Coin_YECY"><img src="./images/yecy-80x80-disabled.png" width="80" height="80" onclick="B_checkout('YECY');"></td></tr>
+						<tr><td>YEC Shielded</td></tr>
+						<tr><td>&nbsp;</td></tr>
+					</table>
+				</div>
+
+
+				<div id="divCheckoutZECT"  class="CheckoutCoin">
+					<table>
+						<tr><td id="E_Checkout_Coin_ZECT"><img src="./images/zect-80x80-disabled.png" width="80" height="80" onclick="B_checkout('ZECT');"></td></tr>
+						<tr><td>ZEC</td></tr>
 						<tr><td>&nbsp;</td></tr>
 					</table>
 				</div>
 
 				<div id="divCheckoutBTCLN" class="CheckoutCoin">
 					<table>
-						<tr><td id="E_Checkout_Coin_BTCLN"><img src="./images/btcln-80x80.png"   width="80" height="80" onclick="B_checkout('BTCLN');"></td></tr>
+						<tr><td id="E_Checkout_Coin_BTCLN"><img src="./images/btcln-80x80-disabled.png" width="80" height="80" onclick="B_checkout('BTCLN');"></td></tr>
 						<tr><td style="text-align: center;">BTC Lightning</td></tr>
 						<tr><td id="E_checkoutBTCLNlimit" style="text-align: center;"></td></tr>
 					</table>
@@ -174,16 +196,16 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 				<div id="divCheckoutBTC"   class="CheckoutCoin">
 					<table>
-						<tr><td id="E_Checkout_Coin_BTC"><img src="./images/btc-80x80.png"      width="80" height="80" onclick="B_checkout('BTC');" title="BTC : Bitcoin (NOT PRIVATE)"></td></tr>
+						<tr><td id="E_Checkout_Coin_BTC"><img src="./images/btc-80x80-disabled.png" width="80" height="80" onclick="B_checkout('BTC');" title="BTC : Bitcoin (NOT PRIVATE)"></td></tr>
 						<tr><td>BTC On-Chain</td></tr>
 						<tr><td>&nbsp;</td></tr>
 					</table>
 				</div>
 
-				<div id="divCheckoutCASH"   class="CheckoutCoin">
+				<div id="divCheckoutYECS"  class="CheckoutCoin">
 					<table>
-						<tr><td><img src="./images/cash-80x80.png"      width="80" height="80" onclick="B_checkout('CASH');"></td></tr>
-						<tr><td id="E_checkoutFIAT_coin"></td></tr>
+						<tr><td id="E_Checkout_Coin_YECS"><img src="./images/yecs-80x80-disabled.png" width="80" height="80" onclick="B_checkout('YECS');"></td></tr>
+						<tr><td>YEC</td></tr>
 						<tr><td>&nbsp;</td></tr>
 					</table>
 				</div>
@@ -197,19 +219,37 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			<div id="divWalletAddress">No Address</div>
 		</div>
 		<div id="divWalletCoin">
-			<div id="divWalletZECT"  class="WalletCoin">
-				<table>
-					<tr><td><img src="./images/zect-80x80.png" width="80" height="80" onclick="B_wallet('ZECT');"></td></tr>
-					<tr><td id="E_walletZECTamount">0.00000000 ZEC</td></tr>
-					<tr><td id="E_walletZECTfiat">0.00 USD</td></tr>
-				</table>
-			</div>
 
 			<div id="divWalletZECZ"  class="WalletCoin">
 				<table>
 					<tr><td><img src="./images/zecz-80x80.png" width="80" height="80" onclick="B_wallet('ZECZ');"></td></tr>
 					<tr><td id="E_walletZECZamount">0.00000000 ZEC</td></tr>
 					<tr><td id="E_walletZECZfiat">0.00 USD</td></tr>
+				</table>
+			</div>
+
+			<div id="divWalletCASH"   class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/cash-80x80.png"      width="80" height="80" onclick="B_wallet('CASH');"></td></tr>
+					<tr><td id="E_walletCASHamount">0.00000000 ZEC</td></tr>
+					<tr><td id="E_walletCASHfiat">0.00 USD</td></tr>
+				</table>
+			</div>
+
+			<div id="divWalletYECY"  class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/yecy-80x80.png" width="80" height="80" onclick="B_wallet('YECY');"></td></tr>
+					<tr><td id="E_walletYECYamount">0.00000000 YEC</td></tr>
+					<tr><td id="E_walletYECYfiat">0.00 USD</td></tr>
+				</table>
+			</div>
+
+
+			<div id="divWalletZECT"  class="WalletCoin">
+				<table>
+					<tr><td><img src="./images/zect-80x80.png" width="80" height="80" onclick="B_wallet('ZECT');"></td></tr>
+					<tr><td id="E_walletZECTamount">0.00000000 ZEC</td></tr>
+					<tr><td id="E_walletZECTfiat">0.00 USD</td></tr>
 				</table>
 			</div>
 
@@ -229,11 +269,11 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				</table>
 			</div>
 
-			<div id="divWalletCASH"   class="WalletCoin">
+			<div id="divWalletYECS"  class="WalletCoin">
 				<table>
-					<tr><td><img src="./images/cash-80x80.png"      width="80" height="80" onclick="B_wallet('CASH');"></td></tr>
-					<tr><td id="E_walletCASHamount">0.00000000 ZEC</td></tr>
-					<tr><td id="E_walletCASHfiat">0.00 USD</td></tr>
+					<tr><td><img src="./images/yecs-80x80.png" width="80" height="80" onclick="B_wallet('YECS');"></td></tr>
+					<tr><td id="E_walletYECSamount">0.00000000 YEC</td></tr>
+					<tr><td id="E_walletYECSfiat">0.00 USD</td></tr>
 				</table>
 			</div>
 
@@ -245,15 +285,9 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			<h2>Legal &amp; Disclaimer</h2>
 	
 			<ul>
-				<li>The author <i><b>IS NOT RESPONSIBLE</b></i> for any damage or loss, financial or otherwise.</li>
-				<li>Use this software <i><b>AT YOUR OWN RISK</b></i></li>
-				<li><a href="https://electriccoin.co" target="_blank">The Electric Coin Company (ECC)</a> &amp; <a href="https://zfnd.org" target="_blank">Zcash Foundation (ZFnd)</a> :-
-					<ul>
-						<li><b><i>HAVE NOT REVIEWED THIS SOFTWARE.</i></b></li>
-						<li><b><i>HAVE NOT ENDOSED THIS SOFTWARE.</i></b></li>
-						<li><b><i>DO NOT SUPPORT THIS SOFTWARE.</i></b></li>
-					</ul>
-				<li>Zcash trademarks belong to ECC.</li>
+				<li><i><b>The author IS NOT RESPONSIBLE for any damage or loss, financial or otherwise.</b></i></li>
+				<li><i><b>Use this software AT YOUR OWN RISK</b></i>.</li>
+				<li><i><b>Released under MIT Licence.</b></i></li>
 			</ul>
 	
 			<h2>Frequently Asked Questions</h2>
@@ -261,12 +295,14 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				<li><h3>What does Zatsuma do?</h3>
 
 					<p>Its a crypto checkout for person-to-person sales, ie: a shop, market, bar, pizza delivery, girl scouts selling cookies, etc.</p>
-					<p>Unlike a crypto wallet it <i>can only receive funds</i>, making it safer for use by a group of people.</p>
+					<p>It can only <i>receive funds</i>, making it safer for use by a group of people.</p>
 				</li>
 
 				<li><h3>How do I get it?</h3>
-					<p>Zatsuma has been funded by <a href="https://zfgrants.zfnd.org" target="_blank">ZF Grants</a> is available to all.</p>
-					<p>Updates are posted on <a href="https://forum.zcashcommunity.com/t/zcash-point-of-sale-project-prototype/33019/28" target="_blank">Zcash Community Forum</a>, feel free to join in the discussion.</p>
+					<p>Zatsuma was funded by <a href="https://zfgrants.zfnd.org" target="_blank">ZF Grants</a> &amp; is available to all under MIT Licence.</p>
+					<p>Updates are posted on the <a href="https://forum.zcashcommunity.com/t/zcash-point-of-sale-project-prototype/33019/28" target="_blank">Zcash Community Forum</a>.</p>
+					<p>Download from GitHub (<a href="https://github.com/ChileBob/Zatsuma" target="_blank">https://github.com/ChileBob/Zatsuma</a>)</p>
+
 				</li>
 	
 				<li><h3>Why Zcash (ZEC) ?</h3>
@@ -279,6 +315,10 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					<p>Zcash is the default coin &amp; <i>required</i> by this software.</p>
 				</li>
 	
+				<li><h3>Why Ycash (YEC) ?</h3>
+					<p>Ycash uses the same tech as Zcash and has the same privacy.</p>
+				</li>
+
 				<li><h3>Why Bitcoin (BTC) ?</h3>
 					<p>Everyone has heard of Bitcoin.</p>
 					<p>Everyone who has crypto has Bitcoin.</p>
@@ -289,7 +329,7 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 				<li><h3>How much does this cost ?</h3>
 					<p>Zatsuma is free for anyone to use.</p>
-					<p>There are no intermediaries, funds go directly to your node wallet which only you control.</p>
+					<p>There are no intermediaries, funds go directly to your wallet which only you control.</p>
 					<p>No hosting required, it uses your computer &amp; internet connection.</p>
 				</li>
 	
@@ -302,12 +342,10 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	
 				<li><h3>System requirements ?</h3>
 					<p>Server :-
-						<ul>
-							<li>Debian/Ubuntu Linux</li>
-							<li>8Gb RAM (4Gb min, but sucks!)</li>
-							<li>500Gb Storage (more is better!)</li>
-							<li>An old laptop works well</li>
-							<li>Patience (downloading blockchains takes time!)</li>
+							<ul>
+							<li>Ubuntu Linux</li>
+							<li>8Gb RAM (5Gb min)</li>
+							<li>500Gb Storage</li>
 						</ul>
 					<p>Client (any of the following):-
 					<ul>
@@ -324,13 +362,15 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 					<ul>
 						<li>ZECwallet</li>
 						<li>zcash-cli</li>
+						<li>YECwallet</li>
+						<li>ycash-cli</li>
 						<li>bitcoin-cli</li>
 						<li>lncli</li>
 					</ul></p>
 				</li>
 	
 				<li><h3>Why is BTC Lightning not always available?</h3>
-					<p>Bitcoin Lightning payments are only possible when the sale value is :-
+					<p>Lightning payments are only possible when the sale value is :-
 					<ul>
 						<li>Less than 0.0429 BTC (lnd daemon safety limit).</li>
 						<li>Less than the maximum inbound capacity of your largest active channel.</li>
@@ -343,9 +383,10 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				</li>
 	
 				<li><h3>Where do the exchange rates come from?</h3>
-					<p>Coinlib, they provide rates for 154 fiat/crypto pairs.</p>
-					<p>To access their API you have to <a href="https://coinlib.io" target="_blank">register</a>.</p>
-					<p>Coinlib has a very cool app for tracking crypto prices &amp; portfolios.</p>
+					<p>CoinLib, who provide rates for 154 fiat/crypto pairs.</p>
+					<p>To access CoinLibs API you have to <a href="https://coinlib.io" target="_blank">register</a>.</p>
+					<p>Ycash data (YECBTC) is supplied by <a href="https://safe.trade" target="_blank">Safe.Trade</a> &amp; converted to fiat using the CoinLib BTCUSD rate.</p>
+					<p>Price data is refreshed every 60 seconds.</p>
 				</li>
 	
 				<li><h3>How do you get a domain name for your shop?</h3>
@@ -354,11 +395,6 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 				</li>
 
 				<li><h3>Credits &amp; Honourable Mentions</h3>
-					<p>For developing the code &amp; math that makes this possible :-</p>
-					<ul>
-						<li><a href="https://electriccoin.co" target="_blank">The Electric Coin Company</a></li>
-					</ul>
-
 					<p>For funding this project via <a href="https://grants.zfnd.org" target="_blank">ZF Grants</a>:-</p>
 					<ul>
 						<li>Zcash Foundation</li>
@@ -431,6 +467,9 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			<h3>ZEC : Zcash (zcashd)</h3>
 			<div id="divStatusZEC"><p>Not connected!</p></div>
 
+			<h3>YEC : Ycash (ycashd)</h3>
+			<div id="divStatusYEC"><p>Not connected!</p></div>
+
 			<h3>BTC : Lightning Network (lnd)</h3>
 			<div id="divStatusBTCLN"><p>Not connected!</p></div>
 
@@ -447,7 +486,7 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		</div>
 
 		<div id="divViewGuestbook">
-			<p style="font-weight:bold;">Something to say?</br>Scan with ZECwallet to leave a message.</p>
+			<p id="divViewMemo" style="font-weight:bold;">Send an encrypted memo from your wallet</p>
 			<div id="divViewQRcode"></div>
 		</div>
 	</div>
@@ -462,7 +501,7 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 			<tr id="divMenuMessages"><th onclick="B_menu('Messages');">MESSAGES</th></tr>
 			<tr id="divMenuStatus"><th onclick="B_menu('Status');">SERVER STATUS</th></tr>
 			<tr id="divMenuView"><th onclick="B_menu('View');">VIEW ORDERS</th></tr>
-			<tr id="divMenuAbout"><th onclick="B_menu('About');">ABOUT ZATSUMA</th></tr>
+			<tr id="divMenuAbout"><th onclick="B_menu('About');">ABOUT</th></tr>
 			<tr id="divMenuLogout"><th onclick="B_menu('Logout');">LOGOUT</th></tr>
 		</table>
 	</div>
@@ -470,8 +509,8 @@ OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	<div id="divFooter">
 		<table width="100%">
 			<tr>
-				<td style="text-align:left; width:25%; vertical-align:top;"><a href="https://forum.zcashcommunity.com/t/zcash-point-of-sale-prototype-funded/33019" target="_blank">Zatsuma (v0.0.6-rc3)</a></td>
-				<td style="text-align:center; width:50%; vertical-align:top;"><a href="https://coinlib.io/apidocs" target="_blank">Powered by CoinLib</a> &amp; <a href="https://grants.zfnd.org" target="_blank">ZF Grants</a></td>
+				<td style="text-align:left; width:25%; vertical-align:top;"><a href="https://forum.zcashcommunity.com/t/zcash-point-of-sale-prototype-funded/33019" target="_blank">(v0.0.7-dev)</a></td>
+				<td style="text-align:center; width:50%; vertical-align:top;"><a href="https://coinlib.io/apidocs" target="_blank">Powered by CoinLib &amp;</a> <a href="https://grants.zfnd.org" target="_blank">ZFnd</a></td>
 				<td style="text-align:right; width:25%; vertical-align:top;"><a href="https://forum.zcashcommunity.com/u/chilebob" target="_blank">ChileBob</a></td>
 			</tr>
 		</table>

@@ -1,0 +1,14 @@
+[Unit]
+Description="Zatsuma Exchange Rate"
+Wants=zatsuma-prices.timer
+Wants=zatsuma-core.service
+PartOf=zatsuma.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/zatsuma/shopd -coinlib
+User=USERNAME
+
+[Install]
+WantedBy=zatsuma-prices.target
+

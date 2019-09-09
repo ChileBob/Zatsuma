@@ -1,0 +1,12 @@
+[Unit]
+Description=Zatsuma Timer (DuckDNS)
+Wants=zatsuma-core.service
+PartOf=zatsuma-core.service
+
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=2min
+Unit=zatsuma-duckdns.service
+
+[Install]
+WantedBy=network.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=Zatsuma Timer (Order Processing)
+PartOf=zatsuma-core.service
+Wants=zatsuma-core.service
+
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=1min
+Unit=zatsuma-orders.service
+
+[Install]
+WantedBy=network.target
