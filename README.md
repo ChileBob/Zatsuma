@@ -17,9 +17,7 @@ Here's a summary of what it does :-
 - The customer scans a payment QRcode with their wallet
 - Simple messaging between sales staff
 - Can receive feedback from customers via memos (ie: visitors book, tips, etc)
-- Designed for Zcash (ZEC), both transparent and shielded
-  ...also supports Bitcoin (BTC) on-chain & Lightning Network
-  ...also Ycash (YEC), transparent and shielded
+- Designed for Zcash (ZEC), also supports Ycash (YEC) & Bitcoin (BTC) on-chain & via Lightning Network
 
 This project has been funded via ZF Grants (https://grants.zfnd.org) - thanks to the Zcash Foundation (https://zfnd.org)
 
@@ -39,10 +37,10 @@ Server :-
 - 8Gb RAM recommended (5Gb minimum)
 - 500Gb Storage (more is better, blockchains are big)
 
-[Installation Guide](https://github.com/ChileBob/Zatsuma/blob/master/INSTALL.md)
-
 Client :-
 
 - Smartphone
 - Tablet
 - Browser
+
+[Installation Guide](https://github.com/ChileBob/Zatsuma/blob/master/INSTALL.md)
