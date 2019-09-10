@@ -2,7 +2,7 @@
 
 My imaginary use case was a market stall selling vegetables, the owner wants his customers to pay with crypto but doesn't trust his sales people with access to his wallet. It would also work well for a bar, a shop, girl-scouts selling cookies, anywhere that sales are made face to face.
 
-Another important feature was there should be no central service to process transactions. All funds received must go directly to the shop wallet and there must be no service fees, commission charges or central point of failure.
+Another important feature was no central service to process transactions, all funds received must go directly to the shop wallet and there must be no service fees, commission charges or central point of failure.
 
 Zatsuma does simple order processing, checks for payments received & a few other things, but as it can ONLY receive funds the shop owner doesn't have to trust anyone. The shop is fully controlled and operated by the shop owner.
 
