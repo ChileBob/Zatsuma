@@ -1,4 +1,4 @@
-# Zatsuma : Zcash Point-Of-Sale
+# Zcash/Ycash/Bitcoin/Lightning Point-Of-Sale
 
 My imaginary use case was a market stall selling vegetables, the owner wants his customers to pay with crypto but doesn't trust his sales people with access to his wallet. It would also work well for a bar, a shop, girl-scouts selling cookies, anywhere that sales are made face to face.
 
@@ -17,8 +17,9 @@ Here's a summary of what it does :-
 - The customer scans a payment QRcode with their wallet
 - Simple messaging between sales staff
 - Can receive feedback from customers via memos (ie: visitors book, tips, etc)
-- Designed for Zcash (ZEC), both transparent and SHIELDED payments
-  ...also supports Bitcoin (BTC) via on-chain or Lightning Network
+- Designed for Zcash (ZEC), both transparent and shielded
+  ...also supports Bitcoin (BTC) on-chain & Lightning Network
+  ...also Ycash (YEC), transparent and shielded
 
 This project has been funded via ZF Grants (https://grants.zfnd.org) - thanks to the Zcash Foundation (https://zfnd.org)
 
